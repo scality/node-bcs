@@ -4,7 +4,6 @@ var CSECTION = require('./node_types'); // section constants
 var ConfigSectionException = require('./exception');
 
 function ConfigSectionObject(name) {
-    console.log('cso init');
     this.name = name || "none";
     this.nodetype = CSECTION.UNK;
     this.objectList = [];
