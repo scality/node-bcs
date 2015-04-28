@@ -1,0 +1,17 @@
+{
+  "name": "node-bcs",
+  "version": "0.0.1",
+  "description": "Node port of serialization format of store products",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha tests"
+  },
+  "keywords": [
+    "scality"
+  ],
+  "author": "Adam Loving",
+  "devDependencies": {
+    "jshint": "^2.7.0",
+    "mocha": "^2.2.4"
+  }
+}
