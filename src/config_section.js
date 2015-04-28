@@ -4,9 +4,9 @@ var util = require('util');
 var CSECTION = require('./node_types');
 var ConfigSectionBranch = require('./branch.js');
 
-function ConfigSection() {
-    ConfigSection.super_.call(this);
-    this.nodeType = CSECTION.ROOT;
+function ConfigSection(name) {
+    ConfigSection.super_.call(this, name);
+    this.nodetype = CSECTION.ROOT;
 }
 
 util.inherits(ConfigSection, ConfigSectionBranch);
