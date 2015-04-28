@@ -1,4 +1,5 @@
 'use strict';
+var fs = require('fs');
 var assert = require('assert');
 var expect = require('chai').expect;
 
@@ -10,7 +11,7 @@ describe('ConfigSection', function() {
     var cs;
 
     beforeEach(function() {
-        cs = new ConfigSection();    
+        cs = new ConfigSection('command');    
         var b = cs.addBranch('cmd_desc');
         b.addInt('id', 1234);
         b.addText('name', 'STATUS');
@@ -36,8 +37,7 @@ describe('ConfigSection', function() {
         d.addRaw('quu2', 'aAZERTYIOIUTRDCVGHGVG\ngsjgfhdshdFhjs\n');
     });
 
-    describe('branch', function() {
-        
+    describe('branch', function() {        
         it('should return simple data', function() {
             assert(cs.getBranch('cmd_desc').getValInt('id') === 1234);
             assert(cs.getBranch('cmd_desc').getValString('name') === 'STATUS');
@@ -54,14 +54,18 @@ describe('ConfigSection', function() {
         });
     });
 
-    // really this is a string format
     describe('binary', function() {
-        it.skip('should convert to binary and back', function() {
-            var s = cs.getBinary();
-            console.log('---output---\n');
-            console.log(s);
-            console.log('---end---');
-            assert(true);
+        it.only('should match output from python library', function(done) {
+            fs.readFile(__dirname + '/expected-results.txt', 'utf-8', 
+                function(err, expected) {
+                    if (err) {
+                        throw err;
+                    }
+                    var actual = cs.getBinary();
+                    expect(actual).to.be.equal(expected);
+                    done();
+                }
+            );
         });
     });
 });
