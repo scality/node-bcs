@@ -13,5 +13,8 @@
   "devDependencies": {
     "jshint": "^2.7.0",
     "mocha": "^2.2.4"
+  },
+  "dependencies": {
+    "sprintf-js": "^1.0.2"
   }
 }
