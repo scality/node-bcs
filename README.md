@@ -1,5 +1,6 @@
+# node-bcs
 
-# Installation
+# How to Install
 
     $ npm install
 
@@ -10,3 +11,5 @@
 # TODOs
 
 Codestyle, editor config file
+
+
