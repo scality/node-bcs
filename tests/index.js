@@ -29,7 +29,7 @@ describe('ConfigSection', function() {
         d.addText('foo', 'bar');
         d.addText('foo2', 'bar\nbar');
         d.addText('foo3', 'bar\nbar2\n');
-        d.addTimestamp('ts', new Date('2010-07-30T00:19:31Z').getTime());
+        d.addTimestamp('ts', 1280449171);
         d.addInt('quu', 42);
         d.addInt64('quu64', 42);
         d.addFloat('quu12', 42.7);
