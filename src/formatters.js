@@ -13,6 +13,14 @@ function convertBooleanToInteger(b) {
 
 module.exports = {};
 
+module.exports[CSECTION.ROOT] = function(name) {
+    return sprintf("S%'04d%s\n", name.length, name);
+};
+
+module.exports[CSECTION.BRANCH] = function(name) {
+    return sprintf("B%'04d%s\n", name.length, name);
+};
+
 module.exports[CSECTION.INTNODE] = function(name, value) {
     return sprintf("V%'04d%sI%i\n", name.length, name, value);
 };

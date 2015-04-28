@@ -1,18 +1,16 @@
 'use strict';
 var util = require('util');
-var sprintf = require('sprintf-js');
 
 var CSECTION = require('./node_types'); // section constants
 var ConfigSectionObject = require('./object');
 var ConfigSectionNode = require('./node.js');
 var ConfigSectionException = require('./exception');
-
+var formatters = require('./formatters');
 
 // inherits from ConfigSectionObject
 function ConfigSectionBranch(name) {    
     ConfigSectionBranch.super_.call(this, name);
     this.nodetype = CSECTION.BRANCH;
-    console.log('csb', this.name, this.nodetype, this.objectList);
 }
 
 util.inherits(ConfigSectionBranch, ConfigSectionObject);
@@ -23,7 +21,6 @@ ConfigSectionBranch.prototype.isBranch = function() {
 };
 
 ConfigSectionBranch.prototype.addBranch = function(name) {
-    console.log('ab', this.name, this.nodetype, this.objectList);
     var b = new ConfigSectionBranch(name);
     this.objectList.push(b);
     return b;
@@ -129,14 +126,10 @@ ConfigSectionBranch.prototype.getBinary = function() {
     var tmp = '';
 
     if (t === CSECTION.BRANCH) {
-        tmp += sprintf("B%'04d%s\n", this.name.length, this.name);
+        tmp += formatters[CSECTION.BRANCH](this.name);
+    } else if (t === CSECTION.ROOT) {
+        tmp += formatters[CSECTION.ROOT](this.name);
     }
-    else if (t === CSECTION.ROOT) {
-        tmp += sprintf("S%.4d%s\n", this.name.length, this.name);
-    }
-
-    // tmp += "".join([i.getBinary() for i in this.attrList]
-    //                     ) + "".join([i.getBinary() for i in this.objectList])
 
     var attrBinaries = this.attrList.map(function(attr) {
         return attr.getBinary();
@@ -146,7 +139,6 @@ ConfigSectionBranch.prototype.getBinary = function() {
     var objectBinaries = this.objectList.map(function(obj) {
         return obj.getBinary();
     });
-
     tmp += objectBinaries.join();
 
     if (t === CSECTION.ROOT) {

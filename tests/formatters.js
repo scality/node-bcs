@@ -4,6 +4,16 @@ var CSECTION = require('../src/node_types');
 var formatters = require('../src/formatters');
 
 describe('Formatters', function() {
+
+    it('formats ROOT', function() {
+        expect(formatters[CSECTION.ROOT]('name'))
+        .to.be.equal('S0004name\n');
+    });
+
+    it('formats BRANCH', function() {
+        expect(formatters[CSECTION.BRANCH]('name'))
+        .to.be.equal('B0004name\n');
+    });
     
     it('formats ATTRTEXT', function() {
         expect(formatters[CSECTION.ATTRTEXT]('name', 'text'))
