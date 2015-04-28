@@ -22,6 +22,8 @@ describe('Parser', function() {
                 throw err;
             }
             expect(cs).to.be.an.instanceof(ConfigSection);
+            expect(cs.name).to.equal('root');
+            expect(cs.objectList[0].name).to.equal('branch');
             done();
         });
 

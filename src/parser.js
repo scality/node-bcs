@@ -13,7 +13,6 @@ module.exports = Parser;
 Parser.prototype.parse = function(readStream, callback) {
 
     var self = this;
-    var cs = new ConfigSection();
 
     readStream
     .pipe(es.split())
@@ -30,7 +29,7 @@ Parser.prototype.parse = function(readStream, callback) {
         callback(err);
     })
     .on('end', function() {
-        callback(undefined, cs);
+        callback(undefined, self.cs);
     });
 
 };
