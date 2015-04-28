@@ -55,7 +55,7 @@ describe('ConfigSection', function() {
     });
 
     describe('binary', function() {
-        it.only('should match output from python library', function(done) {
+        it('should match output from python library', function(done) {
             fs.readFile(__dirname + '/expected-results.txt', 'utf-8', 
                 function(err, expected) {
                     if (err) {
@@ -67,5 +67,9 @@ describe('ConfigSection', function() {
                 }
             );
         });
+    });
+
+    describe.skip('dict', function() {
+        // tbd
     });
 });

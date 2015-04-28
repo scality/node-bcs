@@ -23,6 +23,7 @@ ConfigSectionBranch.prototype.isBranch = function() {
 ConfigSectionBranch.prototype.addBranch = function(name) {
     var b = new ConfigSectionBranch(name);
     this.objectList.push(b);
+    b.parent = this;
     return b;
 };
 
@@ -125,10 +126,10 @@ ConfigSectionBranch.prototype.getBinary = function() {
 
     var tmp = '';
 
-    if (t === CSECTION.BRANCH) {
-        tmp += formatters[CSECTION.BRANCH](this.name);
-    } else if (t === CSECTION.ROOT) {
+    if (t === CSECTION.ROOT) {
         tmp += formatters[CSECTION.ROOT](this.name);
+    } else if (t === CSECTION.BRANCH) {
+        tmp += formatters[CSECTION.BRANCH](this.name);
     }
 
     var attrBinaries = this.attrList.map(function(attr) {
@@ -136,6 +137,7 @@ ConfigSectionBranch.prototype.getBinary = function() {
     });
     tmp += attrBinaries.join('');
 
+    // object list contains child branches
     var objectBinaries = this.objectList.map(function(obj) {
         return obj.getBinary();
     });
