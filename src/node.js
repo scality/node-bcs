@@ -4,6 +4,7 @@ var util = require('util');
 var CSECTION = require('./node_types'); // section constants
 var ConfigSectionObject = require('./object');
 var ConfigSectionException = require('./exception');
+var formatters = require('./formatters');
 
 function ConfigSectionNode(name) {
     ConfigSectionNode.super_.call(this, name);
@@ -47,12 +48,11 @@ ConfigSectionNode.prototype.getBinary = function() {
         throw new ConfigSectionException("CS Type invalid");
     }
 
-    // todo: where does cs_mapping come from?
-    if (!(t in this.cs_mapping)) {
+    if (!(t in formatters)) {
         throw new ConfigSectionException("CS Type not known");
     }
 
-    return "NYI"; // this.cs_mapping[t]["dump_bcs"](this.name, this.nodevalue);
+    return formatters[t](this.name, this.nodevalue);
 };
 
 ConfigSectionNode.prototype.getDict = function() {
