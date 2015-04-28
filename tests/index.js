@@ -1,6 +1,9 @@
 'use strict';
 var assert = require('assert');
+var expect = require('chai').expect;
+
 var ConfigSection = require('../src/config_section');
+var ConfigSectionException = require('../src/exception');
 
 describe('ConfigSection', function() {
   
@@ -38,11 +41,19 @@ describe('ConfigSection', function() {
 
     describe('branch', function() {
         it('should return simple data', function() {
-            assert(cs.getBranch('cmd_desc').getValInt('id'), 1234);
-            assert(cs.getBranch('cmd_desc').getValString('name'), 'STATUS');
-            // self.assertRaises(ConfigSectionException, self.cs.getBranch('cmd_desc').getValInt, 'name')
-            // self.assertRaises(ConfigSectionException, self.cs.getBranch('cmd_desc').getValString, 'id')                 
-        });        
+            assert(cs.getBranch('cmd_desc').getValInt('id') === 1234);
+            assert(cs.getBranch('cmd_desc').getValString('name') === 'STATUS');
+        });
+
+        it('should throw error when value has different type', function() {
+            expect(function() {
+                cs.getBranch('cmd_desc').getValInt('name'); 
+            }).to.throw(ConfigSectionException);
+            
+            expect(function() {
+                cs.getBranch('cmd_desc').getValString('id');
+            }).to.throw(ConfigSectionException);                
+        });
     });
 
     describe.skip('binary', function() {

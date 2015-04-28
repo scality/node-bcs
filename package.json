@@ -11,6 +11,7 @@
   ],
   "author": "Adam Loving",
   "devDependencies": {
+    "chai": "^2.3.0",
     "jshint": "^2.7.0",
     "mocha": "^2.2.4"
   },
