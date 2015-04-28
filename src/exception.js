@@ -1,6 +1,7 @@
 'use strict';
 var util = require('util');
 
+// TODO: rename "ConfigSectionError"
 function ConfigSectionException(msg) {
     this.msg = msg;
 }
