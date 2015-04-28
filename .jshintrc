@@ -67,7 +67,6 @@
     "trailing": true,
     "indent": 2,
     "white": true,
-    "quotmark": true,
     "maxparams": 5,
     "maxdepth": 3,
     "maxstatements": 25,
