@@ -1,9 +1,12 @@
 
-# Questions
+# Installation
 
-1. is mocha OK?
-1. what is scality convention for indention, etc?
+    $ npm install
 
-TODO: 
+# Running tests
+
+    $ npm test
+
+# TODOs
 
 Codestyle, editor config file
