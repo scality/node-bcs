@@ -134,12 +134,12 @@ ConfigSectionBranch.prototype.getBinary = function() {
     var attrBinaries = this.attrList.map(function(attr) {
         return attr.getBinary();
     });
-    tmp += attrBinaries.join();
+    tmp += attrBinaries.join('');
 
     var objectBinaries = this.objectList.map(function(obj) {
         return obj.getBinary();
     });
-    tmp += objectBinaries.join();
+    tmp += objectBinaries.join('');
 
     if (t === CSECTION.ROOT) {
         tmp += "s\n";
