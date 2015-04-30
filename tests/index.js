@@ -69,7 +69,14 @@ describe('ConfigSection', function() {
         });
     });
 
-    describe.skip('dict', function() {
-        // tbd
+    describe('getDict', function() {
+        
+        var expectedResults = require('./expected-results-python.json');
+
+        it('should generate a dictionary object', function() {
+            var dict = cs.getDict();
+            expect(dict).to.be.an('object');
+            expect(dict).to.deep.equal(expectedResults);
+        });
     });
 });

@@ -37,7 +37,6 @@ Parser.prototype.parse = function(readStream, callback) {
 Parser.prototype.readLine = function(line) {
     console.log('readLine', line);
     var firstLetter = line[0];
-
     var restOfLine = line.substr(1);
 
     switch (firstLetter) {

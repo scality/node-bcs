@@ -1,0 +1,35 @@
+{
+  "command": [{
+      "cmd_desc":    [{
+          "name":    ["STATUS"],
+          "vnodeid": ["0"],
+          "type":    ["REQUEST"],
+          "data":    [{}],
+          "id":      ["1234"],
+          "data2": [
+            {
+              "data_inside": [{
+                  "quu2": [
+                    "True",
+                    "aAZERTYIOIUTRDCVGHGVG\ngsjgfhdshdFhjs\n"
+                  ],
+                  "quu12": [ "42.7" ],
+                  "quu": [ "42" ],
+                  "ts": [ "1280449171" ],
+                  "ATTR::attr": [ "a" ],
+                  "ATTR::attr4": [ "5.5" ],
+                  "ATTR::attr3": [ "5" ],
+                  "ATTR::attr2": [ "5" ],
+                  "quu64": [ "42" ],
+                  "foo": [ "bar" ],
+                  "foo2": [ "bar\nbar" ],
+                  "foo3": [ "bar\nbar2\n" ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

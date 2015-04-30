@@ -153,6 +153,8 @@ ConfigSectionBranch.prototype.getBinary = function() {
 };
 
 
+// Returns an object tree to match functionality in the Python library
+// This format has branches inside of arrays of length 1.
 ConfigSectionBranch.prototype.getDict = function() {
     var t = this.getType();
 
@@ -161,37 +163,44 @@ ConfigSectionBranch.prototype.getDict = function() {
     }
     
     var result = {};
-    
-    for (var i in this.attrList) {
+    result[this.name] = [{}];
+    var child = result[this.name][0];
+
+    for (var i in this.attrList) {        
         var attr = this.attrList[i];
-        var res = attr.getDict();
-        var k = Object.keys(res)[0];
+        var attrDict = attr.getDict();
+        var key = Object.keys(attrDict)[0];
+        var value = attrDict[key];
         
-        if (k in result) {
-            result[k].extend(res.values()[0]);
+        if (key in child) {
+            child[key].push(value);
         } else {
-            result[k] = [];
-            result[k].extend(res.values()[0]);
+            child[key] = [];
+            child[key].push(value);
         }
     }
 
+    // objectList includes child branches
     for (var j in this.objectList) {
         var obj = this.objectList[j];
-        var r = obj.getDict();
-        var key = Object.keys(r)[0];
-        
-        if (key in result) {
-            result[key].extend(r.values()[0]);
+        var objDict = obj.getDict();
+        var key1 = Object.keys(objDict)[0];
+        var value1 = objDict[key1];
+
+        if (obj.getType() === CSECTION.BRANCH) {
+            // TODO: assuming can't have 2 branches with same name
+            child[key1] = value1;
         } else {
-            result[key] = [];
-            result[key].extend(r.values()[0]);           
+            if (key1 in child) {
+                child[key1].push(value1);            
+            } else {
+                child[key1] = [];
+                child[key1].push(value1);                         
+            }
         }
     }
 
-    var output = {};
-    output[this.name] = [result];
-
-    return output;
+    return result;
 };
 
 ConfigSectionBranch.prototype._getChildVal = function(name) {
