@@ -23,7 +23,7 @@ ConfigSectionBranch.prototype.isBranch = function() {
 ConfigSectionBranch.prototype.addBranch = function(name) {
     var b = new ConfigSectionBranch(name);
     this.objectList.push(b);
-    b.parent = this;
+    b.parent = this; // todo: getter setter?
     return b;
 };
 
@@ -87,6 +87,7 @@ ConfigSectionBranch.prototype.addText = function(name, value) {
     var n = this._addNode(name);
     n.setType(CSECTION.TEXTNODE);
     n.setValue(value);
+    n.parent = this;
     return n;
 };
 
@@ -94,6 +95,7 @@ ConfigSectionBranch.prototype.addRaw = function(name, value) {
     var n = this._addNode(name);
     n.setType(CSECTION.RAWNODE);
     n.setValue(value);
+    n.parent = this;
     return n;
 };
 

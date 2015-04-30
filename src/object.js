@@ -31,3 +31,14 @@ ConfigSectionObject.prototype.getType = function() {
 ConfigSectionObject.prototype.getName = function() {
     return this.name;
 };
+
+ConfigSectionObject.prototype.isMultiline = function() {
+    var t = this.getType();
+    return  (
+        t === CSECTION.ATTRTEXT   || 
+        t === CSECTION.RAWNODE    ||
+        t === CSECTION.RAWNODENC  ||
+        t === CSECTION.ATTRDOUBLE ||
+        t === CSECTION.TEXTNODE
+    );
+};
