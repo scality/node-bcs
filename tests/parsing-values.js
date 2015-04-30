@@ -17,7 +17,7 @@ describe('Value parsing', function() {
         var line = 'A0004nameL42';
         line = line.substring(1);
         var name = parser.parseName(line);
-        expect(name).to.equal('quu64');
+        expect(name).to.equal('name');
     });
 
     it('should parse longer name', function() {

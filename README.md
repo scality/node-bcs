@@ -15,6 +15,8 @@
 * code coverage
 * tests for edgecases / malformed input?
 * add lint command prior to running tests
+* add line numbers to errors
+* remove console.logs
 
 # Notes
 

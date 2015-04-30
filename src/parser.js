@@ -46,13 +46,17 @@ Parser.prototype.readLine = function(line) {
         var newValue = '\n' + line;
         this.context.setValue(this.context.getValue() + newValue);
 
-        if (line === '') {
-            if (this.context.getValue().length === this.context.expectedLength) {
-                this.context = this.context.parent; // pop     
-            } else {
-                throw new ConfigSectionException('Unexpected value found (length doesn\'t match');
-            }            
-        }
+        if (this.context.getValue().length === this.context.expectedLength) {
+            this.context = this.context.parent; // pop     
+        } else {
+            if (line === '') {
+                throw new ConfigSectionException(
+                    'Unexpected value found (length doesn\'t match). ' +
+                    'Expected ' + this.context.getName() + ' to be ' + 
+                    this.context.expectedLength + 
+                    ', got length = ' + this.context.getValue().length);
+            }
+        }            
         return;
     }
 
@@ -67,7 +71,7 @@ Parser.prototype.readLine = function(line) {
             this.parseBranch(restOfLine);
             return;
         case 'b': // end of branch
-        case 's': // end of section (end of root)
+        case 's': // end of root (section)
             this.context = this.context.parent; // pop
             return; 
         case 'V': // value
