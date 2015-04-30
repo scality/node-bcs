@@ -164,43 +164,39 @@ ConfigSectionBranch.prototype.getDict = function() {
     
     var result = {};
     result[this.name] = [{}];
-    var child = result[this.name][0];
+    var children = result[this.name][0];
 
     for (var i in this.attrList) {        
         var attr = this.attrList[i];
-        var attrDict = attr.getDict();
-        var key = Object.keys(attrDict)[0];
-        var value = attrDict[key];
-        
-        if (key in child) {
-            child[key].push(value);
-        } else {
-            child[key] = [];
-            child[key].push(value);
-        }
+        this.getDictForChild(children, attr);
     }
 
     // objectList includes child branches
     for (var j in this.objectList) {
         var obj = this.objectList[j];
-        var objDict = obj.getDict();
-        var key1 = Object.keys(objDict)[0];
-        var value1 = objDict[key1];
-
-        if (obj.getType() === CSECTION.BRANCH) {
-            // TODO: assuming can't have 2 branches with same name
-            child[key1] = value1;
-        } else {
-            if (key1 in child) {
-                child[key1].push(value1);            
-            } else {
-                child[key1] = [];
-                child[key1].push(value1);                         
-            }
-        }
+        this.getDictForChild(children, obj);
     }
 
     return result;
+};
+
+// helper function for getDict
+ConfigSectionBranch.prototype.getDictForChild = function(children, objectOrAttr) {
+    var objDict = objectOrAttr.getDict();
+    var key1 = Object.keys(objDict)[0];
+    var value1 = objDict[key1];
+
+    if (objectOrAttr.getType() === CSECTION.BRANCH) {
+        // TODO: assuming can't have 2 branches with same name
+        children[key1] = value1;
+    } else {
+        if (key1 in children) {
+            children[key1].push(value1);            
+        } else {
+            children[key1] = [];
+            children[key1].push(value1);                         
+        }
+    }    
 };
 
 ConfigSectionBranch.prototype._getChildVal = function(name) {
