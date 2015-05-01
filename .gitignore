@@ -27,3 +27,6 @@ build/Release
 
 # Node NPM dependencies
 node_modules
+
+# tmp directory used for large file testing
+tmp

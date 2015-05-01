@@ -5,7 +5,9 @@ var ConfigSection = require('./config_section');
 var ConfigSectionException = require('./exception');
 var CSECTION = require('./node_types');
 
-function Parser() {}
+function Parser() {
+    this.currentLineNumber = 0;
+}
 
 module.exports = Parser;
 
@@ -15,7 +17,9 @@ Parser.prototype.parse = function(readStream, callback) {
     readStream
     .pipe(es.split())
     .pipe(es.mapSync(function(line) {
+        self.currentLineNumber += 1;
         try {
+            // console.log(self.currentLineNumber, line);
             self.readLine(line);
         } catch (err) {
             // todo: do we need this, or will error bubble to .on('error') ?
