@@ -35,7 +35,7 @@ describe('Parser', function() {
     });
 
     it('should parse a file stream', function(done) {
-        var readStream = fs.createReadStream(__dirname + '/expected-results.txt');
+        var readStream = fs.createReadStream(__dirname + '/expected_results.txt');
 
         // could also have parser trigger stream events,
         // but let's start with a callback
@@ -49,7 +49,7 @@ describe('Parser', function() {
             var actual = cs.getBinary();
 
             // and compare that to the contents of the file
-            fs.readFile(__dirname + '/expected-results.txt', 'utf-8',
+            fs.readFile(__dirname + '/expected_results.txt', 'utf-8',
                 function(err, expected) {
                     if (err) {
                         throw err;

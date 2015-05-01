@@ -1,6 +1,5 @@
 'use strict';
 var fs = require('fs');
-var assert = require('assert');
 var expect = require('chai').expect;
 
 var ConfigSection = require('../src/config_section');
@@ -38,8 +37,8 @@ describe('ConfigSection', function() {
 
     describe('branch', function() {
         it('should return simple data', function() {
-            assert(cs.getBranch('cmd_desc').getValInt('id') === 1234);
-            assert(cs.getBranch('cmd_desc').getValString('name') === 'STATUS');
+            expect(cs.getBranch('cmd_desc').getValInt('id')).to.equal(1234);
+            expect(cs.getBranch('cmd_desc').getValString('name')).to.equal('STATUS');
         });
 
         it('should throw error when value has different type', function() {
@@ -55,7 +54,7 @@ describe('ConfigSection', function() {
 
     describe('binary', function() {
         it('should match output from python library', function(done) {
-            fs.readFile(__dirname + '/expected-results.txt', 'utf-8',
+            fs.readFile(__dirname + '/expected_results.txt', 'utf-8',
                 function(err, expected) {
                     if (err) {
                         throw err;
@@ -69,7 +68,7 @@ describe('ConfigSection', function() {
     });
 
     describe('getDict', function() {
-        var expectedResults = require('./expected-results-python.json');
+        var expectedResults = require('./expected_results_python.json');
 
         it('should generate a dictionary object', function() {
             var dict = cs.getDict();
