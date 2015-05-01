@@ -8,6 +8,7 @@ var Parser = require('../src/parser');
 
 describe('Parser', function() {
     var parser;
+    var tempPath = __dirname + '/../tmp';
 
     beforeEach(function() {
         parser = new Parser();
@@ -37,8 +38,6 @@ describe('Parser', function() {
     it('should parse a file stream', function(done) {
         var readStream = fs.createReadStream(__dirname + '/expected_results.txt');
 
-        // could also have parser trigger stream events,
-        // but let's start with a callback
         parser.parse(readStream, function(err, cs) {
             if (err) {
                 throw err;
@@ -58,6 +57,24 @@ describe('Parser', function() {
                     done();
                 }
             );
+        });
+    });
+
+    it('should be a writeable stream (support pipe to)', function(done) {
+        var readStream = fs.createReadStream(__dirname + '/expected_results.txt');
+
+        readStream
+        .pipe(parser)
+        .on('error', function(err) {
+            console.log('error', err);
+            throw err;
+        })
+        .on('end', function() {
+            expect(true).to.equal(true);
+        })
+        .on('close', function() {
+            // todo: expect that file will be the same
+            done();
         });
     });
 });

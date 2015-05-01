@@ -31,6 +31,7 @@ describe('Generating a large file', function() {
         parser = new Parser();
     });
 
+    // this generates an 18.6MB file
     it('should generate from lots of objects', function(done) {
         for (var i = 0; i < 100; i++) {
             var b = cs.addBranch('test-branch' + i);
@@ -55,7 +56,6 @@ describe('Generating a large file', function() {
 
                 b = b.addBranch('test-branch' + i + '.' + j);
             }
-            console.log(i);
         }
 
         fs.writeFile(tempFile, cs.getBinary(),
@@ -67,7 +67,6 @@ describe('Generating a large file', function() {
             }
         );
 
-        // todo: streaming interface
         // todo: sample memory usage
         // todo: expect file size
     });

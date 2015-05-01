@@ -1,14 +1,25 @@
 'use strict';
+var util = require('util');
+var Writable = require('stream').Writable;
 var es = require('event-stream');
 
 var ConfigSection = require('./config_section');
 var ConfigSectionException = require('./exception');
 var CSECTION = require('./node_types');
 
-function Parser() {
+function Parser(options) {
+    Writable.call(this, options);
     this.currentLineNumber = 0;
+    this.buffer = '';
+
+    this.on('finish', function() {
+        this.end('');
+        this.emit('end');
+        this.emit('close');
+    });
 }
 
+util.inherits(Parser, Writable);
 module.exports = Parser;
 
 Parser.prototype.parse = function(readStream, callback) {
@@ -17,9 +28,7 @@ Parser.prototype.parse = function(readStream, callback) {
     readStream
     .pipe(es.split())
     .pipe(es.mapSync(function(line) {
-        self.currentLineNumber += 1;
         try {
-            // console.log(self.currentLineNumber, line);
             self.readLine(line);
         } catch (err) {
             // todo: do we need this, or will error bubble to .on('error') ?
@@ -38,6 +47,22 @@ Parser.prototype.parse = function(readStream, callback) {
             callback(undefined, self.cs);
         });
     });
+};
+
+// this interface allows the parser to be receive a .pipe()
+// assumes input stream is UTF-8 encoded
+Parser.prototype._write = function(chunk, encoding, callback) {
+    this.buffer += chunk.toString();
+    var i = this.buffer.indexOf('\n');
+
+    while (i > -1) {
+        var line = this.buffer.substring(0, i);
+        this.buffer = this.buffer.substring(i + 1);
+        this.readLine(line);
+        i = this.buffer.indexOf('\n');
+    }
+
+    process.nextTick(callback);
 };
 
 Parser.prototype.continueMultiline = function(line) {
@@ -60,6 +85,7 @@ Parser.prototype.continueMultiline = function(line) {
 Parser.prototype.readLine = function(line) {
     var firstLetter = line[0];
     var restOfLine = line.substr(1);
+    this.currentLineNumber += 1;
 
     if (this.context && this.context.isMultiline()) {
         this.continueMultiline(line);
