@@ -34,8 +34,8 @@ ConfigSectionObject.prototype.getName = function() {
 
 ConfigSectionObject.prototype.isMultiline = function() {
     var t = this.getType();
-    return  (
-        t === CSECTION.ATTRTEXT   || 
+    return (
+        t === CSECTION.ATTRTEXT   ||
         t === CSECTION.RAWNODE    ||
         t === CSECTION.RAWNODENC  ||
         t === CSECTION.ATTRDOUBLE ||

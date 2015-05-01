@@ -15,28 +15,28 @@ util.inherits(ConfigSectionNode, ConfigSectionObject);
 module.exports = ConfigSectionNode;
 
 ConfigSectionNode.prototype.isBranch = function() {
-    return false;    
+    return false;
 };
 
 ConfigSectionNode.prototype.setType = function(newtype) {
     this.nodetype = newtype;
 };
-        
+
 ConfigSectionNode.prototype.setValue = function(value) {
     this.nodevalue = value;
 };
-        
+
 ConfigSectionNode.prototype.getValue = function() {
     return this.nodevalue;
 };
-        
+
 ConfigSectionNode.prototype.isAttr = function() {
     var t = this.getType();
-    return  (
-        t === CSECTION.ATTRTEXT  || 
-        t === CSECTION.ATTRINT   || 
-        t === CSECTION.ATTRINT64 || 
-        t === CSECTION.ATTRFLOAT || 
+    return (
+        t === CSECTION.ATTRTEXT  ||
+        t === CSECTION.ATTRINT   ||
+        t === CSECTION.ATTRINT64 ||
+        t === CSECTION.ATTRFLOAT ||
         t === CSECTION.ATTRDOUBLE
     );
 };
@@ -66,8 +66,8 @@ ConfigSectionNode.prototype.getDict = function() {
         var s = this.nodevalue.toString();
         value = s[0].toUpperCase() + s.substring(1);
     } else {
-        value = this.nodevalue.toString();    
-    }        
+        value = this.nodevalue.toString();
+    }
 
     if (this.isAttr()) {
         dict["ATTR::" + this.name] = value.toString();

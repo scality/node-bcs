@@ -18,7 +18,6 @@ exports.BOOLEAN = 16;
 exports.TIMESTAMPNODE = 17;
 exports.UNK = 9999;
 
-
 // note, it appears these are not supported (do not occur in code):
 // ATTRDOUBLE
 // ATTRIP

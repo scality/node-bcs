@@ -6,7 +6,6 @@ var CSECTION = require('../src/node_types');
 var Parser = require('../src/parser');
 
 describe('Value parsing', function() {
-
     var parser;
 
     beforeEach(function() {
@@ -64,7 +63,7 @@ describe('Value parsing', function() {
         expect(node).to.be.an.instanceof(ConfigSectionNode);
         expect(node.getName()).to.equal('name');
         expect(node.getValue()).to.equal(true);
-        expect(node.getType()).to.equal(CSECTION.BOOLEAN);            
+        expect(node.getType()).to.equal(CSECTION.BOOLEAN);
     });
 
     it('should parse a timestamp', function() {
@@ -73,13 +72,13 @@ describe('Value parsing', function() {
         parser.readLine('V0004nameS' + timestamp);
         var node = parser.cs.objectList[0];
         expect(node).to.be.an.instanceof(ConfigSectionNode);
-        expect(node.getType()).to.equal(CSECTION.TIMESTAMPNODE);            
+        expect(node.getType()).to.equal(CSECTION.TIMESTAMPNODE);
         expect(node.getName()).to.equal('name');
         expect(node.getValue()).to.equal(timestamp);
     });
 
     it('should set timestamp value to -1 for far future', function() {
-        var timestamp = (new Date().getTime()/1000) * 4;
+        var timestamp = (new Date().getTime() / 1000) * 4;
         parser.readLine('S0004root');
         parser.readLine('V0004nameS' + timestamp);
         var node = parser.cs.objectList[0];
@@ -91,7 +90,7 @@ describe('Value parsing', function() {
 
     it('should parse single line text value', function() {
         parser.readLine('S0004root');
-        parser.readLine('V0004nameT000000000011justoneline');            
+        parser.readLine('V0004nameT000000000011justoneline');
         var node = parser.cs.objectList[0];
         expect(node).to.be.an.instanceof(ConfigSectionNode);
         expect(node.getName()).to.equal('name');
@@ -103,7 +102,7 @@ describe('Value parsing', function() {
     it('should parse multiline text value', function() {
         parser.readLine('S0004root');
         parser.readLine('V0004nameT000000000009bar');
-        
+
         var node = parser.cs.objectList[0];
         expect(node).to.be.an.instanceof(ConfigSectionNode);
         expect(node.getType()).to.equal(CSECTION.TEXTNODE);
@@ -114,7 +113,7 @@ describe('Value parsing', function() {
 
         parser.readLine('bar2');
         expect(node.getValue()).to.equal('bar\nbar2');
-        
+
         parser.readLine('');
         expect(node.getValue()).to.equal('bar\nbar2\n');
         expect(parser.context).to.equal(parser.cs);
@@ -125,7 +124,7 @@ describe('Value parsing', function() {
         parser.readLine('V0004nameR000000000037aAZERTYIOIUTRDCVGHGVG');
         parser.readLine('gsjgfhdshdFhjs');
         parser.readLine('');
-        
+
         var node = parser.cs.objectList[0];
         expect(node).to.be.an.instanceof(ConfigSectionNode);
         expect(node.getType()).to.equal(CSECTION.RAWNODE);

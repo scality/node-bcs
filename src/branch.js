@@ -8,7 +8,7 @@ var ConfigSectionException = require('./exception');
 var formatters = require('./formatters');
 
 // inherits from ConfigSectionObject
-function ConfigSectionBranch(name) {    
+function ConfigSectionBranch(name) {
     ConfigSectionBranch.super_.call(this, name);
     this.nodetype = CSECTION.BRANCH;
 }
@@ -73,7 +73,7 @@ ConfigSectionBranch.prototype.addAttrText = function(name, value) {
     var n = this._addAttrNode(name);
     n.setType(CSECTION.ATTRTEXT);
     n.setValue(value);
-    return n;        
+    return n;
 };
 
 ConfigSectionBranch.prototype.addBool = function(name, value) {
@@ -110,7 +110,7 @@ ConfigSectionBranch.prototype.addTimestamp = function(name, value) {
 ConfigSectionBranch.prototype._addNode = function(name) {
     var n = new ConfigSectionNode(name);
     this.objectList.push(n);
-    return(n);
+    return n;
 };
 
 ConfigSectionBranch.prototype._addAttrNode = function(name) {
@@ -121,7 +121,7 @@ ConfigSectionBranch.prototype._addAttrNode = function(name) {
 
 ConfigSectionBranch.prototype.getBinary = function() {
     var t = this.getType();
-    
+
     if (t === CSECTION.UNK) {
         throw new ConfigSectionException('CS Type invalid');
     }
@@ -154,7 +154,6 @@ ConfigSectionBranch.prototype.getBinary = function() {
     return tmp;
 };
 
-
 // Returns an object tree to match functionality in the Python library
 // This format has branches inside of arrays of length 1.
 ConfigSectionBranch.prototype.getDict = function() {
@@ -163,12 +162,12 @@ ConfigSectionBranch.prototype.getDict = function() {
     if (t === CSECTION.UNK) {
         throw new ConfigSectionException("CS Type invalid");
     }
-    
+
     var result = {};
     result[this.name] = [{}];
     var children = result[this.name][0];
 
-    for (var i in this.attrList) {        
+    for (var i in this.attrList) {
         var attr = this.attrList[i];
         this.getDictForChild(children, attr);
     }
@@ -193,12 +192,12 @@ ConfigSectionBranch.prototype.getDictForChild = function(children, objectOrAttr)
         children[key1] = value1;
     } else {
         if (key1 in children) {
-            children[key1].push(value1);            
+            children[key1].push(value1);
         } else {
             children[key1] = [];
-            children[key1].push(value1);                         
+            children[key1].push(value1);
         }
-    }    
+    }
 };
 
 ConfigSectionBranch.prototype._getChildVal = function(name) {
@@ -237,11 +236,11 @@ ConfigSectionBranch.prototype._getChildVal = function(name) {
 
 ConfigSectionBranch.prototype.getValInt = function(name) {
     var n = this._getChildVal(name);
-    
+
     if (n === undefined) {
         return n;
     }
-    
+
     if (n.getType() === CSECTION.INTNODE) {
         return n.getValue();
     }
@@ -251,7 +250,7 @@ ConfigSectionBranch.prototype.getValInt = function(name) {
 
 ConfigSectionBranch.prototype.getValInt64 = function(name) {
     var n = this._getChildVal(name);
-    
+
     if (n === undefined) {
         return undefined;
     }
@@ -265,8 +264,8 @@ ConfigSectionBranch.prototype.getValInt64 = function(name) {
 
 ConfigSectionBranch.prototype.getValString = function(name) {
     var n = this._getChildVal(name);
-    
-    if (n === undefined) {        
+
+    if (n === undefined) {
         return undefined;
     }
 
@@ -279,11 +278,11 @@ ConfigSectionBranch.prototype.getValString = function(name) {
 
 ConfigSectionBranch.prototype.getValBool = function(name) {
     var n = this._getChildVal(name);
-    
+
     if (n === undefined) {
         return undefined;
     }
-    
+
     if (n.getType() === CSECTION.BOOLEAN) {
         return n.getValue();
     }
@@ -293,12 +292,12 @@ ConfigSectionBranch.prototype.getValBool = function(name) {
 
 ConfigSectionBranch.prototype.getBranch = function(name) {
     var n = this._getChildVal(name);
-    
+
     if (n === undefined) {
         return undefined;
     }
-    
-    if (n.getType() === CSECTION.BRANCH) {        
+
+    if (n.getType() === CSECTION.BRANCH) {
         return n;
     }
 

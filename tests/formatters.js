@@ -4,7 +4,6 @@ var CSECTION = require('../src/node_types');
 var formatters = require('../src/formatters');
 
 describe('Formatters', function() {
-
     it('formats ROOT', function() {
         expect(formatters[CSECTION.ROOT]('name'))
         .to.be.equal('S0004name\n');
@@ -14,7 +13,7 @@ describe('Formatters', function() {
         expect(formatters[CSECTION.BRANCH]('name'))
         .to.be.equal('B0004name\n');
     });
-    
+
     it('formats ATTRTEXT', function() {
         expect(formatters[CSECTION.ATTRTEXT]('name', 'text'))
         .to.be.equal('A0004nameT000000000004text\n');
@@ -24,12 +23,12 @@ describe('Formatters', function() {
         expect(formatters[CSECTION.ATTRINT]('name', 1))
         .to.be.equal('A0004nameI1\n');
     });
-    
+
     it('formats ATTRINT64', function() {
         expect(formatters[CSECTION.ATTRINT64]('name', '1'))
         .to.be.equal('A0004nameL1\n');
     });
-    
+
     it('formats ATTRFLOAT', function() {
         expect(formatters[CSECTION.ATTRFLOAT]('name', '1'))
         .to.be.equal('A0004nameF1.000000\n');
@@ -73,5 +72,4 @@ describe('Formatters', function() {
         expect(formatters[CSECTION.TIMESTAMPNODE]('name', 1234))
         .to.be.equal('V0004nameS1234\n');
     });
-
 });
