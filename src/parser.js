@@ -134,13 +134,13 @@ Parser.prototype.parseTextOrRaw = function(type, name, line) {
 
     switch (type) {
         case CSECTION.ATTRTEXT:
-            node = this.cs.addAttrText(name, data);
+            node = this.context.addAttrText(name, data);
             break;
         case CSECTION.RAWNODE:
-            node = this.cs.addRaw(name, data);
+            node = this.context.addRaw(name, data);
             break;
         case CSECTION.TEXTNODE:
-            node = this.cs.addText(name, data);
+            node = this.context.addText(name, data);
             break;
     }
 
@@ -175,18 +175,18 @@ Parser.prototype.parseAttr = function(line) {
     switch (typeIndicator) {
         case 'I': // integer
             var value = parseInt(line, 10);
-            this.cs.addAttrInt(name, value);
+            this.context.addAttrInt(name, value);
             break;
         case 'L': // long
             value = parseInt(line);
-            this.cs.addAttrInt64(name, value);
+            this.context.addAttrInt64(name, value);
             break;
         case 'T': // text (single line only)
             this.parseTextOrRaw(CSECTION.ATTRTEXT, name, line);
             break;
         case 'F': // float
             value = parseFloat(line);
-            this.cs.addAttrFloat(name, value);
+            this.context.addAttrFloat(name, value);
             break;
     }
 };
@@ -206,16 +206,16 @@ Parser.prototype.parseValue = function(line) {
     console.log('parseValue', name, typeIndicator, line);
     switch (typeIndicator) {
         case 'I': // integer
-            this.cs.addInt(name, parseInt(line, 10));
+            this.context.addInt(name, parseInt(line, 10));
             break;
         case 'F':
-            this.cs.addFloat(name, parseFloat(line, 10));
+            this.context.addFloat(name, parseFloat(line, 10));
             break;
         case 'L':
-            this.cs.addInt64(name, parseInt(line, 10));
+            this.context.addInt64(name, parseInt(line, 10));
             break;
         case 'B':
-            this.cs.addBool(name, 
+            this.context.addBool(name, 
                 parseInt(line.substring(index)) === 0 ? false : true);
             break;
         case 'T': // text
@@ -232,7 +232,7 @@ Parser.prototype.parseValue = function(line) {
                 timestamp = -1;
             }
             
-            this.cs.addTimestamp(name, timestamp);
+            this.context.addTimestamp(name, timestamp);
             break;
         default: 
             // todo: include line number, or complete line

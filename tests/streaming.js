@@ -35,7 +35,7 @@ describe('Parser', function() {
         stream.emit('close');
     });
 
-    it('should parse a file stream', function(done) {
+    it.only('should parse a file stream', function(done) {
         var readStream = fs.createReadStream(__dirname + '/expected-results.txt');
         
         // could also have parser trigger stream events, but let's start with a callback
@@ -44,8 +44,21 @@ describe('Parser', function() {
                 throw err;
             }
             expect(cs).to.be.an.instanceof(ConfigSection);
-            done();
-        });
+            
+            // now dump it back to a string
+            var actual = cs.getBinary();
+            console.log(actual);
 
+            // and compare that to the contents of the file
+            fs.readFile(__dirname + '/expected-results.txt', 'utf-8', 
+                function(err, expected) {
+                    if (err) {
+                        throw err;
+                    }
+                    expect(actual).to.be.equal(expected);
+                    done();
+                }
+            );
+        });
     });
 });
