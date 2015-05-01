@@ -4,7 +4,7 @@
   "description": "Node port of serialization format of store products",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/.bin/jshint src/*.js tests/*.js; ./node_modules/.bin/istanbul cover node_modules/.bin/_mocha tests"
+    "test": "node_modules/.bin/jshint src/*.js tests/*.js; ./node_modules/.bin/jscs src/*.js tests/*.js; ./node_modules/.bin/istanbul cover node_modules/.bin/_mocha tests"
   },
   "keywords": [
     "scality"
@@ -13,6 +13,7 @@
   "devDependencies": {
     "chai": "^2.3.0",
     "istanbul": "^0.3.13",
+    "jscs": "^1.13.1",
     "jshint": "^2.7.0",
     "mocha": "^2.2.4",
     "mocha-istanbul": "^0.2.0"
