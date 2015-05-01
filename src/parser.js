@@ -5,9 +5,7 @@ var ConfigSection = require('./config_section');
 var ConfigSectionException = require('./exception');
 var CSECTION = require('./node_types');
 
-function Parser() { 
-
-}
+function Parser() {}
 
 module.exports = Parser;
 
@@ -21,42 +19,48 @@ Parser.prototype.parse = function(readStream, callback) {
         try {
             self.readLine(line);    
         } catch (err) {
+            // todo: do we need this, or will error bubble to .on('error') ?
             console.error(err);
             callback(err);
         }
     }))
     .on('error', function(err) {
         console.error('Error occurred while reading stream', err);
-        callback(err);
+        process.nextTick(function() { 
+            callback(err); 
+        });
     })
     .on('end', function() {
-        callback(undefined, self.cs);
+        process.nextTick(function() {
+            callback(undefined, self.cs);
+        });
     });
 
 };
 
+Parser.prototype.continueMultiline = function(line) {
+    var newValue = '\n' + line;
+    this.context.setValue(this.context.getValue() + newValue);
+
+    if (this.context.getValue().length === this.context.expectedLength) {
+        this.context = this.context.parent; // pop     
+    } else {
+        if (line === '') {
+            throw new ConfigSectionException(
+                'Unexpected value found (length doesn\'t match). ' +
+                'Expected ' + this.context.getName() + ' to be ' + 
+                this.context.expectedLength + 
+                ', got length = ' + this.context.getValue().length);
+        }
+    }            
+};
+
 Parser.prototype.readLine = function(line) {
-    console.log('readLine', line);
     var firstLetter = line[0];
     var restOfLine = line.substr(1);
 
-    console.log('context', this.context ? this.context.isMultiline() : 'none');
-
-    if (this.context && this.context.isMultiline()) {
-        var newValue = '\n' + line;
-        this.context.setValue(this.context.getValue() + newValue);
-
-        if (this.context.getValue().length === this.context.expectedLength) {
-            this.context = this.context.parent; // pop     
-        } else {
-            if (line === '') {
-                throw new ConfigSectionException(
-                    'Unexpected value found (length doesn\'t match). ' +
-                    'Expected ' + this.context.getName() + ' to be ' + 
-                    this.context.expectedLength + 
-                    ', got length = ' + this.context.getValue().length);
-            }
-        }            
+    if (this.context && this.context.isMultiline()) {    
+        this.continueMultiline(line);
         return;
     }
 
@@ -79,10 +83,6 @@ Parser.prototype.readLine = function(line) {
             return;
         case 'A':  // attribute
             this.parseAttr(restOfLine);
-            return;
-        case '\n':             
-            // extra line with \n terminates text node
-            // (can also find length from size)
             return;
         case undefined: // EOF
             return;
@@ -121,6 +121,17 @@ Parser.prototype.parseBranch = function(line) {
     this.context = this.context.addBranch(name);
 };
 
+Parser.prototype.parseTimestamp = function(name, line) {
+    var timestamp = parseInt(line, 10);
+    
+    // weird check for arbitrary future time
+    if (timestamp > (new Date().getTime()/1000) * 2) {
+        timestamp = -1;
+    }
+    
+    this.context.addTimestamp(name, timestamp);
+};
+
 // Note: text may span multiple lines
 // This just parses the length of the value, and the first
 // chunk of the value up to the end of the first line
@@ -128,8 +139,6 @@ Parser.prototype.parseTextOrRaw = function(type, name, line) {
     var length = parseInt(line.substring(0, 12), 10);
     var data = line.substring(12);
     
-    console.log('parseTextOrRaw', name, length, data);
-
     var node;
 
     switch (type) {
@@ -171,7 +180,6 @@ Parser.prototype.parseAttr = function(line) {
     index += 1;
     line = line.substring(index);
 
-    console.log('parseAttr', name, typeIndicator, line);
     switch (typeIndicator) {
         case 'I': // integer
             var value = parseInt(line, 10);
@@ -203,7 +211,6 @@ Parser.prototype.parseValue = function(line) {
     index += 1;
     line = line.substring(index);
 
-    console.log('parseValue', name, typeIndicator, line);
     switch (typeIndicator) {
         case 'I': // integer
             this.context.addInt(name, parseInt(line, 10));
@@ -225,14 +232,7 @@ Parser.prototype.parseValue = function(line) {
             this.parseTextOrRaw(CSECTION.RAWNODE, name, line);
             break;
         case 'S': // timestamp
-            var timestamp = parseInt(line, 10);
-            
-            // weird check for arbitrary future time
-            if (timestamp > (new Date().getTime()/1000) * 2) {
-                timestamp = -1;
-            }
-            
-            this.context.addTimestamp(name, timestamp);
+            this.parseTimestamp(name, line);
             break;
         default: 
             // todo: include line number, or complete line
