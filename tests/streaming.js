@@ -5,10 +5,10 @@ var Stream = require('stream');
 
 var ConfigSection = require('../src/config_section');
 var Parser = require('../src/parser');
+var ConfigSectionReadableStream = require('../src/readable_stream');
 
 describe('Parser', function() {
     var parser;
-    var tempPath = __dirname + '/../tmp';
 
     beforeEach(function() {
         parser = new Parser();
@@ -75,6 +75,33 @@ describe('Parser', function() {
         .on('close', function() {
             // todo: expect that file will be the same
             done();
+        });
+    });
+});
+
+describe('ConfigSectionReadableStream', function() {
+    it('should be a readable stream (support pipe from)', function(done) {
+        var readStream = fs.createReadStream(__dirname + '/expected_results.txt');
+        var parser = new Parser();
+        var writeStream = fs.createWriteStream(__dirname +
+            '/../tmp/stream_output.txt');
+
+        readStream
+        .pipe(parser)
+        .on('close', function() {
+            var configSectionStreamer = new ConfigSectionReadableStream(parser.cs);
+            configSectionStreamer.pipe(writeStream)
+            .on('error', function(err) {
+                console.log('error', err);
+                throw err;
+            })
+            .on('end', function() {
+                expect(true).to.equal(true);
+            })
+            .on('close', function() {
+                // todo: expect that file will be the same
+                done();
+            });
         });
     });
 });
