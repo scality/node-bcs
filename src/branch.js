@@ -119,6 +119,26 @@ ConfigSectionBranch.prototype._addAttrNode = function(name) {
     return n;
 };
 
+ConfigSectionBranch.prototype.getStartString = function() {
+    var t = this.getType();
+
+    if (t === CSECTION.ROOT) {
+        return formatters[CSECTION.ROOT](this.name);
+    } else if (t === CSECTION.BRANCH) {
+        return formatters[CSECTION.BRANCH](this.name);
+    }
+};
+
+ConfigSectionBranch.prototype.getEndString = function() {
+    var t = this.getType();
+
+    if (t === CSECTION.ROOT) {
+        return "s\n";
+    } else if (t === CSECTION.BRANCH) {
+        return "b\n";
+    }
+};
+
 ConfigSectionBranch.prototype.getBinary = function() {
     var t = this.getType();
 
@@ -126,13 +146,7 @@ ConfigSectionBranch.prototype.getBinary = function() {
         throw new ConfigSectionException('CS Type invalid');
     }
 
-    var tmp = '';
-
-    if (t === CSECTION.ROOT) {
-        tmp += formatters[CSECTION.ROOT](this.name);
-    } else if (t === CSECTION.BRANCH) {
-        tmp += formatters[CSECTION.BRANCH](this.name);
-    }
+    var tmp = this.getStartString();
 
     var attrBinaries = this.attrList.map(function(attr) {
         return attr.getBinary();
@@ -145,11 +159,7 @@ ConfigSectionBranch.prototype.getBinary = function() {
     });
     tmp += objectBinaries.join('');
 
-    if (t === CSECTION.ROOT) {
-        tmp += "s\n";
-    } else if (t === CSECTION.BRANCH) {
-        tmp += "b\n";
-    }
+    tmp += this.getEndString();
 
     return tmp;
 };
@@ -303,3 +313,4 @@ ConfigSectionBranch.prototype.getBranch = function(name) {
 
     throw new ConfigSectionException("invalid type");
 };
+
