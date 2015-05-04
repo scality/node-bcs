@@ -32,6 +32,10 @@ ConfigSectionObject.prototype.getName = function() {
     return this.name;
 };
 
+ConfigSectionObject.prototype.getTypeName = function() {
+    return Object.keys(CSECTION)[this.nodetype];
+};
+
 ConfigSectionObject.prototype.isMultiline = function() {
     var t = this.getType();
     return (
@@ -41,4 +45,19 @@ ConfigSectionObject.prototype.isMultiline = function() {
         t === CSECTION.ATTRDOUBLE ||
         t === CSECTION.TEXTNODE
     );
+};
+
+// convert to a JS object without parent reference
+ConfigSectionObject.prototype.toObject = function() {
+    return {
+        name: this.name,
+        type: this.getTypeName(),
+        attrList: this.attrList.map(function(attr) { return attr.toObject() }),
+        objectList: this.objectList.map(function(obj) { return obj.toObject() })
+    }
+}
+
+// this is the function called by console.log to get string from object
+ConfigSectionObject.prototype.inspect = function() {
+    return JSON.stringify(this.toObject());
 };

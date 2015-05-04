@@ -77,3 +77,11 @@ ConfigSectionNode.prototype.getDict = function() {
 
     return dict;
 };
+
+// convert to a JS object without parent reference
+// Note: does not truncate long values
+ConfigSectionNode.prototype.toObject = function() {
+    var obj = ConfigSectionNode.super_.prototype.toObject.call(this);
+    obj.value = this.getValue() ? this.getValue().toString() : null;
+    return obj;
+}
