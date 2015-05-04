@@ -4,37 +4,31 @@ var util = require('util');
 var Readable = require('stream').Readable;
 var CSECTION = require('./node_types');
 
-// Since the serialized file represents an inorder
-// traversal, order is important. The underlying
-// ConfigSection objects can't change after they've been pushed to the stream.
-
-// So this class could simply traverse the tree and push as it goes
-// or...
-// if you assume the parser or client code that is building
-// the CS is doing it in the right order,
-// just maintain a pointer up to the last pushed node,
-// and always push a flat serialization of that node (don't recurse)
-// (could throw an exception if out of order)
-
+// Iterates through the cs object using an index path
 function ConfigSectionReadableStream(cs, options) {
     Readable.call(this, options);
     this.cs = cs;
+
+    // An indexPath has the format '0.1.0.2' (the root is the empty string)
+    // Attributes come before objects, which may be branches.
     this.indexPath = '';
 }
 
 util.inherits(ConfigSectionReadableStream, Readable);
 module.exports = ConfigSectionReadableStream;
 
-ConfigSectionReadableStream.prototype._read = function(n) {
-    console.log('_read', n, this.indexPath);
-
+// The implementation of this function is what makes this class streamable
+// TODO: The caller passes the number of bytes they'd like to read.
+// Currently, this just returns one line every time. So, this
+// could be optimized using a loop to return the requested bytes.
+ConfigSectionReadableStream.prototype._read = function() {
     var context = this.cs.getObjectAtIndexPath(this.indexPath);
 
     if (context === undefined) {
         this.popIndexPath(); // have processed all children
         var parent = this.cs.getObjectAtIndexPath(this.indexPath);
-        console.log('push', parent.getEndString());
         this.push(parent.getEndString());
+
         if (this.indexPath === '') {
             this.push(null); // all done
         } else {
@@ -47,11 +41,9 @@ ConfigSectionReadableStream.prototype._read = function(n) {
     var t = context.getType();
 
     if (t === CSECTION.ROOT || t === CSECTION.BRANCH) {
-        console.log('push', context.getStartString());
         this.push(context.getStartString());
         this.pushIndexPath(); // process my first child next
     } else { // attribute or object
-        console.log('push', context.getBinary());
         this.push(context.getBinary());
         this.incrementIndexPath(); // to my next sibling
     }
@@ -71,7 +63,6 @@ ConfigSectionReadableStream.prototype.incrementIndexPath = function() {
     var lastIndexValue = indexes[lastIndex];
     indexes[lastIndex] = parseInt(lastIndexValue, 10) + 1;
     this.indexPath = indexes.join('.');
-    console.log('iip', indexes);
 };
 
 ConfigSectionReadableStream.prototype.popIndexPath = function() {
