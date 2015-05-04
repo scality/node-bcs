@@ -88,6 +88,9 @@ describe('ConfigSection', function() {
             b = cs.getObjectAtIndexPath('0.5.0');
             expect(b.name).to.be.equal('data_inside');
 
+            var attr = cs.getObjectAtIndexPath('0.5.0.0');
+            expect(attr.name).to.be.equal('attr');
+
             var r = cs.getObjectAtIndexPath('0.5.0.12');
             expect(r.name).to.be.equal('quu2');
             expect(r.getType()).to.be.equal(CSECTION.RAWNODE);
