@@ -7,6 +7,9 @@ var ConfigSection = require('../src/config_section');
 var Parser = require('../src/parser');
 var ConfigSectionReadableStream = require('../src/readable_stream');
 
+var expectedResultsFilePath = __dirname + '/expected_results.txt';
+var tempFilePath = __dirname + '/../tmp/stream_output.txt';
+
 describe('Parser', function() {
     var parser;
 
@@ -36,7 +39,7 @@ describe('Parser', function() {
     });
 
     it('should parse a file stream', function(done) {
-        var readStream = fs.createReadStream(__dirname + '/expected_results.txt');
+        var readStream = fs.createReadStream(expectedResultsFilePath);
 
         parser.parse(readStream, function(err, cs) {
             if (err) {
@@ -48,20 +51,14 @@ describe('Parser', function() {
             var actual = cs.getBinary();
 
             // and compare that to the contents of the file
-            fs.readFile(__dirname + '/expected_results.txt', 'utf-8',
-                function(err, expected) {
-                    if (err) {
-                        throw err;
-                    }
-                    expect(actual).to.be.equal(expected);
-                    done();
-                }
-            );
+            var expected = fs.readFileSync(expectedResultsFilePath, 'utf-8');
+            expect(actual).to.be.equal(expected);
+            done();
         });
     });
 
     it('should be a writeable stream (support pipe to)', function(done) {
-        var readStream = fs.createReadStream(__dirname + '/expected_results.txt');
+        var readStream = fs.createReadStream(expectedResultsFilePath);
 
         readStream
         .pipe(parser)
@@ -69,39 +66,47 @@ describe('Parser', function() {
             console.log('error', err);
             throw err;
         })
-        .on('end', function() {
-            expect(true).to.equal(true);
-        })
         .on('close', function() {
-            // todo: expect that file will be the same
+            var expected = fs.readFileSync(tempFilePath, 'utf-8');
+            var actual = parser.cs.getBinary();
+            expect(actual).to.be.equal(expected);
             done();
         });
+    });
+
+    // TODO
+    it.skip('should throw error for an empty file', function(done) {
+        done();
     });
 });
 
 describe('ConfigSectionReadableStream', function() {
     it('should be a readable stream (support pipe from)', function(done) {
-        var readStream = fs.createReadStream(__dirname + '/expected_results.txt');
+        var readStream = fs.createReadStream(expectedResultsFilePath, 'utf-8');
         var parser = new Parser();
-        var writeStream = fs.createWriteStream(__dirname +
-            '/../tmp/stream_output.txt');
+        var writeStream = fs.createWriteStream(tempFilePath);
 
         readStream
         .pipe(parser)
         .on('close', function() {
             var configSectionStreamer = new ConfigSectionReadableStream(parser.cs);
+
             configSectionStreamer.pipe(writeStream)
             .on('error', function(err) {
                 console.log('error', err);
                 throw err;
             })
-            .on('end', function() {
-                expect(true).to.equal(true);
-            })
             .on('close', function() {
-                // todo: expect that file will be the same
+                var actual = fs.readFileSync(tempFilePath, 'utf-8');
+                var expected = fs.readFileSync(expectedResultsFilePath, 'utf-8');
+                expect(actual).to.be.equal(expected);
                 done();
             });
         });
+    });
+
+    // TODO
+    it.skip('should stream an empty object', function(done) {
+        done();
     });
 });
