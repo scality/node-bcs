@@ -4,6 +4,7 @@ var expect = require('chai').expect;
 
 var ConfigSection = require('../src/config_section');
 var ConfigSectionException = require('../src/exception');
+var CSECTION = require('../src/node_types.js');
 
 describe('ConfigSection', function() {
     var cs;
@@ -74,6 +75,22 @@ describe('ConfigSection', function() {
             var dict = cs.getDict();
             expect(dict).to.be.an('object');
             expect(dict).to.deep.equal(expectedResults);
+        });
+    });
+
+    describe('getObjectAtIndexPath', function() {
+        it('should find the right objects', function() {
+            expect(cs.getObjectAtIndexPath('')).to.be.equal(cs);
+
+            var b = cs.getObjectAtIndexPath('0');
+            expect(b.name).to.be.equal('cmd_desc');
+
+            b = cs.getObjectAtIndexPath('0.5.0');
+            expect(b.name).to.be.equal('data_inside');
+
+            var r = cs.getObjectAtIndexPath('0.5.0.12');
+            expect(r.name).to.be.equal('quu2');
+            expect(r.getType()).to.be.equal(CSECTION.RAWNODE);
         });
     });
 });

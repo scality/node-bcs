@@ -10,9 +10,35 @@ function ConfigSection(name) {
 }
 
 util.inherits(ConfigSection, ConfigSectionBranch);
+module.exports = ConfigSection;
 
 ConfigSection.prototype.isRoot = function() {
     return true;
 };
 
-module.exports = ConfigSection;
+ConfigSection.prototype.getObjectAtIndexPath = function(path) {
+    if (path.trim().length === 0) {
+        return this;
+    }
+
+    var self = this;
+    var context = self;
+    var indexes = path.split('.');
+
+    indexes = indexes.map(function(i) {
+        return parseInt(i);
+    });
+
+    for (var j in indexes) {
+        var index = indexes[j];
+
+        if (index < this.attrList.length) {
+            context = context.attrList[index];
+        } else {
+            var objIndex = index - context.attrList.length;
+            context = context.objectList[objIndex];
+        }
+    }
+
+    return context;
+};
