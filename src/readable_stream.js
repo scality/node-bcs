@@ -22,6 +22,7 @@ module.exports = ConfigSectionReadableStream;
 // Currently, this just returns one line every time. So, this
 // could be optimized using a loop to return the requested bytes.
 ConfigSectionReadableStream.prototype._read = function() {
+    var self = this;
     var context = this.cs.getObjectAtIndexPath(this.indexPath);
 
     if (context === undefined) {
@@ -47,7 +48,7 @@ ConfigSectionReadableStream.prototype._read = function() {
         var array = context.getBuffersOrStrings();
 
         array.forEach(function(bufferOrString) {
-            this.push(bufferOrString); // connect stream if available
+            self.push(bufferOrString); // connect stream if available
         });
 
         this.incrementIndexPath(); // to my next sibling

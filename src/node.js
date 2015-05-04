@@ -61,6 +61,8 @@ ConfigSectionNode.prototype.getBuffers = function() {
     if (t === CSECTION.RAWNODE) {
         if (this.value instanceof Array) {
             return this.value;
+        } else {
+            return undefined;
         }
     } else {
         return undefined;

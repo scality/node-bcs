@@ -99,6 +99,18 @@ ConfigSectionBranch.prototype.addRaw = function(name, value) {
     return n;
 };
 
+// used for adding a set of buffers
+ConfigSectionBranch.prototype.addRawArray = function(name, array, totalLength) {
+    var n = this._addNode(name);
+    n.setType(CSECTION.RAWNODE);
+    n.setValue({
+        array: array,
+        totalLength: totalLength
+    });
+    n.parent = this;
+    return n;
+};
+
 // accepts unix timestamp
 ConfigSectionBranch.prototype.addTimestamp = function(name, value) {
     var n = this._addNode(name);
