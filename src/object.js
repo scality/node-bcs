@@ -52,10 +52,14 @@ ConfigSectionObject.prototype.toObject = function() {
     return {
         name: this.name,
         type: this.getTypeName(),
-        attrList: this.attrList.map(function(attr) { return attr.toObject() }),
-        objectList: this.objectList.map(function(obj) { return obj.toObject() })
-    }
-}
+        attrList: this.attrList.map(function(attr) {
+            return attr.toObject();
+        }),
+        objectList: this.objectList.map(function(obj) {
+            return obj.toObject();
+        })
+    };
+};
 
 // this is the function called by console.log to get string from object
 ConfigSectionObject.prototype.inspect = function() {
