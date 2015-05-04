@@ -84,4 +84,4 @@ ConfigSectionNode.prototype.toObject = function() {
     var obj = ConfigSectionNode.super_.prototype.toObject.call(this);
     obj.value = this.getValue() ? this.getValue().toString() : null;
     return obj;
-}
+};
