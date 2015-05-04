@@ -32,7 +32,7 @@ ConfigSection.prototype.getObjectAtIndexPath = function(path) {
     for (var j in indexes) {
         var index = indexes[j];
 
-        if (index < this.attrList.length) {
+        if (index < context.attrList.length) {
             context = context.attrList[index];
         } else {
             var objIndex = index - context.attrList.length;
