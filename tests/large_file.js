@@ -58,7 +58,7 @@ describe('Generating a large file', function() {
             }
         }
 
-        fs.writeFile(tempFile, cs.getBinary(),
+        fs.writeFile(tempFile, cs.getString(),
             function(err) {
                 if (err) {
                     throw err;
@@ -83,7 +83,7 @@ describe('Generating a large file', function() {
             expect(cs).to.be.an.instanceof(ConfigSection);
 
             // now dump it back to a string
-            var actual = cs.getBinary();
+            var actual = cs.getString();
 
             // and compare that to the contents of the file
             fs.readFile(tempFile, 'utf-8',

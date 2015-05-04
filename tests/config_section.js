@@ -60,7 +60,7 @@ describe('ConfigSection', function() {
                     if (err) {
                         throw err;
                     }
-                    var actual = cs.getBinary();
+                    var actual = cs.getString();
                     expect(actual).to.be.equal(expected);
                     done();
                 }

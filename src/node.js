@@ -41,7 +41,7 @@ ConfigSectionNode.prototype.isAttr = function() {
     );
 };
 
-ConfigSectionNode.prototype.getBinary = function() {
+ConfigSectionNode.prototype.getString = function() {
     var t = this.getType();
 
     if (t === CSECTION.UNK) {
@@ -53,6 +53,28 @@ ConfigSectionNode.prototype.getBinary = function() {
     }
 
     return formatters[t](this.name, this.nodevalue);
+};
+
+ConfigSectionNode.prototype.getBuffers = function() {
+    var t = this.getType();
+
+    if (t === CSECTION.RAWNODE) {
+        if (this.value instanceof Array) {
+            return this.value;
+        }
+    } else {
+        return undefined;
+    }
+};
+
+ConfigSectionNode.prototype.getBuffersOrStrings = function() {
+    var buffers = this.getBuffers();
+
+    if (buffers) {
+        return buffers;
+    } else {
+        return [this.getString()];
+    }
 };
 
 // warning: maintains Python compatibility

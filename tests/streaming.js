@@ -48,7 +48,7 @@ describe('Parser', function() {
             expect(cs).to.be.an.instanceof(ConfigSection);
 
             // now dump it back to a string
-            var actual = cs.getBinary();
+            var actual = cs.getString();
 
             // and compare that to the contents of the file
             var expected = fs.readFileSync(expectedResultsFilePath, 'utf-8');
@@ -68,7 +68,7 @@ describe('Parser', function() {
         })
         .on('close', function() {
             var expected = fs.readFileSync(tempFilePath, 'utf-8');
-            var actual = parser.cs.getBinary();
+            var actual = parser.cs.getString();
             expect(actual).to.be.equal(expected);
             done();
         });
