@@ -22,6 +22,24 @@ function Parser(options) {
 util.inherits(Parser, Writable);
 module.exports = Parser;
 
+Parser.parseString = function(s) {
+    var parser = new Parser();
+    return parser.parseString(s);
+};
+
+// assumes nodes in string are terminated properly
+// leaves this.cs waiting for further input
+Parser.prototype.parseString = function(input) {
+    input = input || '';
+    var self = this;
+
+    input.split('\n').forEach(function(line) {
+        self.readLine(line);
+    });
+
+    return this.cs;
+};
+
 Parser.prototype.parse = function(readStream, callback) {
     var self = this;
 
