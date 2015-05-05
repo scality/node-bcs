@@ -88,7 +88,7 @@ Parser.prototype.continueMultiline = function(line) {
     var newSuffix = '\n' + line;
 
     // if it's a string -- else append buffer
-    if (value instanceof String) {
+    if (typeof(value) === 'string') {
         this.context.setValue(value + newSuffix);
     } else if (value instanceof Buffer) {
         // not sure if Raw nodes can contain newlines (this may not occur)
@@ -113,8 +113,6 @@ Parser.prototype.readLine = function(line) {
     var firstLetter = line[0];
     var restOfLine = line.substr(1);
     this.currentLineNumber += 1;
-
-    // console.log(this.currentLineNumber, line);
 
     if (this.context && this.context.isMultiline()) {
         this.continueMultiline(line);
@@ -203,16 +201,7 @@ Parser.prototype.parseTextOrRaw = function(type, name, line) {
             break;
         case CSECTION.RAWNODE:
             actualLength = Buffer.byteLength(data);
-            // console.log('parseTextOrRaw', data, actualLength, expectedLength);
-            if (actualLength >= expectedLength) { // extra 4 bytes
-                node = this.context.addRaw(name, new Buffer(data));
-            // } else if (actualLength <= expectedLength) {
-            //     // add data including newline
-            //     node = this.context.addRaw(name, new Buffer(data));
-            } else {
-                throw new ConfigSectionException("Raw node length mismatch");
-            }
-
+            node = this.context.addRaw(name, new Buffer(data));
             break;
         case CSECTION.TEXTNODE:
             node = this.context.addText(name, data);
@@ -228,6 +217,8 @@ Parser.prototype.parseTextOrRaw = function(type, name, line) {
             this.context = node;
             node.expectedLength = expectedLength; // remember for next line
         }
+    } else if (actualLength > expectedLength) {
+        throw new ConfigSectionException('Found data in excess of expected length');
     }
 };
 

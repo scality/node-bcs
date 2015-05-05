@@ -57,11 +57,7 @@ describe('Parser', function() {
         });
     });
 
-    // process.once("uncaughtException", function(error) {
-    //     console.log(error);
-    // });
-
-    it.only('should be a writeable stream (support pipe to)', function(done) {
+    it('should be a writeable stream (support pipe to)', function(done) {
         var sampleRawFilePath = __dirname + '/samples/raw.txt';
         var readStream = fs.createReadStream(sampleRawFilePath, {
             encoding: 'utf-8'

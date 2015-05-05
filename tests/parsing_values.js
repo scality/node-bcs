@@ -129,8 +129,9 @@ describe('Value parsing', function() {
         expect(node).to.be.an.instanceof(ConfigSectionNode);
         expect(node.getType()).to.equal(CSECTION.RAWNODE);
         expect(node.getName()).to.equal('name');
-        expect(node.getValue()).to.equal('aAZERTYIOIUTRDCVGHGVG\ngsjgfhdshdFhjs\n');
-        expect(node.getValue().length).to.equal(37);
+        expect(node.getValue().toString())
+            .to.equal('aAZERTYIOIUTRDCVGHGVG\ngsjgfhdshdFhjs\n');
+        expect(node.getValue().toString().length).to.equal(37);
         expect(parser.context).to.equal(parser.cs);
     });
 });
