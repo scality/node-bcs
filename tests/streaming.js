@@ -7,7 +7,7 @@ var ConfigSection = require('../src/config_section');
 var Parser = require('../src/parser');
 var ConfigSectionReadableStream = require('../src/readable_stream');
 
-var expectedResultsFilePath = __dirname + '/expected_results.txt';
+var expectedResultsFilePath = __dirname + '/samples/expected_results.txt';
 var tempFilePath = __dirname + '/../tmp/stream_output.txt';
 
 describe('Parser', function() {
