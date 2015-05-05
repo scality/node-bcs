@@ -53,7 +53,6 @@ module.exports[CSECTION.TEXTNODE] = function(name, value) {
 };
 
 module.exports[CSECTION.RAWNODE] = function(name, value) {
-    console.log("RAWNODE -> STRING", name, value, value.toString());
     return sprintf("V%'04d%sR%'012d%s\n", name.length, name,
         value.length, value);
 };
