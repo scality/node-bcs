@@ -20,6 +20,13 @@ ConfigSectionBranch.prototype.isBranch = function() {
     return true;
 };
 
+ConfigSectionBranch.prototype.addCS = function(b) {
+    this.objectList.push(b);
+    b.parent = this; // todo: getter setter?
+    return b;
+};
+
+
 ConfigSectionBranch.prototype.addBranch = function(name) {
     var b = new ConfigSectionBranch(name);
     this.objectList.push(b);
