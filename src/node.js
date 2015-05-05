@@ -55,27 +55,17 @@ ConfigSectionNode.prototype.getString = function() {
     return formatters[t](this.name, this.nodevalue);
 };
 
-ConfigSectionNode.prototype.getBuffers = function() {
+ConfigSectionNode.prototype.getBuffer = function() {
     var t = this.getType();
 
-    if (t === CSECTION.RAWNODE) {
-        if (this.value instanceof Array) {
-            return this.value;
-        } else {
-            return undefined;
-        }
+    if (this.value instanceof Buffer) {
+        var prefix = formatters[t](this.name, '');
+        return Buffer.concat([
+            prefix,
+            this.value
+        ], prefix.length + this.value.length);
     } else {
-        return undefined;
-    }
-};
-
-ConfigSectionNode.prototype.getBuffersOrStrings = function() {
-    var buffers = this.getBuffers();
-
-    if (buffers) {
-        return buffers;
-    } else {
-        return [this.getString()];
+        return new Buffer(this.getString());
     }
 };
 

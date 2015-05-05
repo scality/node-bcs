@@ -45,12 +45,7 @@ ConfigSectionReadableStream.prototype._read = function() {
         this.push(context.getStartString());
         this.pushIndexPath(); // process my first child next
     } else { // attribute or object
-        var array = context.getBuffersOrStrings();
-
-        array.forEach(function(bufferOrString) {
-            self.push(bufferOrString); // connect stream if available
-        });
-
+        self.push(context.getBuffer()); // connect stream if available
         this.incrementIndexPath(); // to my next sibling
     }
 };
