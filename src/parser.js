@@ -47,6 +47,7 @@ Parser.prototype.parse = function(readStream, callback) {
     .pipe(es.split())
     .pipe(es.mapSync(function(line) {
         try {
+            // bugbug: what about newlines in middle of raw data
             self.readLine(line);
         } catch (err) {
             // todo: do we need this, or will error bubble to .on('error') ?
@@ -69,44 +70,63 @@ Parser.prototype.parse = function(readStream, callback) {
 
 // this interface allows the parser to be receive a .pipe()
 // assumes input stream is UTF-8 encoded
+// bugbug: make sure handles less than 1 line
 Parser.prototype._write = function(chunk, encoding, callback) {
-    this.buffer += chunk.toString();
+    this.buffer += chunk.toString(); // continue from last time
+
+    if (this.context && this.context.isMultiline()) {
+        this.buffer = this.continueMultiline(this.buffer);
+    }
+
     var i = this.buffer.indexOf('\n');
 
     while (i > -1) {
+        // if we're reading a binary section, need to pass the newline through
         var line = this.buffer.substring(0, i);
         this.buffer = this.buffer.substring(i + 1);
-        this.readLine(line);
+        this.readLine(line); // really "readPrefix"
+
+        if (this.context && this.context.isMultiline()) {
+            this.buffer = this.continueMultiline(this.buffer);
+        }
+
         i = this.buffer.indexOf('\n');
+        console.log('split again at', i);
     }
 
-    process.nextTick(callback);
+    if (callback) {
+        process.nextTick(callback);
+    }
 };
 
-Parser.prototype.continueMultiline = function(line) {
+Parser.prototype.continueMultiline = function(chunk) {
     var value = this.context.getValue();
-    var newSuffix = '\n' + line;
+    var currentLength = value.length;
+    var expectedLength = this.context.expectedLength;
+    var neededLength = expectedLength - currentLength;
 
-    // if it's a string -- else append buffer
-    if (typeof(value) === 'string') {
-        this.context.setValue(value + newSuffix);
-    } else if (value instanceof Buffer) {
-        // not sure if Raw nodes can contain newlines (this may not occur)
-        newSuffix = new Buffer(newSuffix);
-        this.context.setValue(
-            Buffer.concat([value, newSuffix], value.length + newSuffix.length));
-    }
+    // todo: optimize for buffers
+    // if (typeof(value) === 'string') {
+    var remainder = chunk.toString();
+    var needed;
 
-    if (this.context.getValue().length === this.context.expectedLength) {
+    if (neededLength < remainder.length) {
+        needed = chunk.substring(0, neededLength);
+        // skip passed newline
+        remainder = remainder(neededLength + 1);
         this.context = this.context.parent; // pop
-    } else if (this.context.getValue().length > this.context.expectedLength) {
-        throw new ConfigSectionException(
-            'Unexpected value found (length doesn\'t match). ' +
-            'Expected "' + this.context.getName() + '"" ' +
-            'to have length = ' + this.context.expectedLength +
-            ', got length = ' + this.context.getValue().length + '. ' +
-            'Line: ' + this.currentLineNumber);
+    } else {
+        needed = chunk;
+        remainder = null;
     }
+
+    console.log('continueMultiline', needed, remainder);
+
+    this.context.setValue(value + needed);
+    // } else if (value instanceof Buffer) {
+    // todo: optimize for buffer
+
+    return remainder;
 };
 
 Parser.prototype.readLine = function(line) {
@@ -114,10 +134,7 @@ Parser.prototype.readLine = function(line) {
     var restOfLine = line.substr(1);
     this.currentLineNumber += 1;
 
-    if (this.context && this.context.isMultiline()) {
-        this.continueMultiline(line);
-        return;
-    }
+    console.log('readLine', this.currentLineNumber, line);
 
     switch (firstLetter) {
         case 'S': // root
@@ -194,6 +211,8 @@ Parser.prototype.parseTextOrRaw = function(type, name, line) {
     var data = line.substring(12);
     var actualLength = data.length;
     var node;
+
+    console.log('parseTextOrRaw', name, expectedLength, actualLength);
 
     switch (type) {
         case CSECTION.ATTRTEXT:

@@ -10,6 +10,54 @@ var ConfigSectionReadableStream = require('../src/readable_stream');
 var expectedResultsFilePath = __dirname + '/samples/expected_results.txt';
 var tempFilePath = __dirname + '/../tmp/stream_output.txt';
 
+describe('Writeable interface', function() {
+
+    var parser;
+
+    beforeEach(function() {
+        parser = new Parser();
+    });
+
+    it('should handle partial writes', function() {
+        parser._write('S0006');
+        parser._write('answer\n');
+        parser._write('A0008protocol');
+        parser._write('T000000000005chord\n');
+
+        var cs = parser.cs;
+        expect(cs.name).to.be.equal('answer');
+        expect(cs.attrList[0].name).to.be.equal('protocol');
+        expect(cs.attrList[0].nodevalue).to.be.equal('chord');
+    });
+
+    it('should handle exactly one line per write', function() {
+        parser._write('S0006answer\n');
+        parser._write('A0008protocolT000000000005chord\n');
+
+        var cs = parser.cs;
+        expect(cs.name).to.be.equal('answer');
+        expect(cs.attrList[0].name).to.be.equal('protocol');
+        expect(cs.attrList[0].nodevalue).to.be.equal('chord');
+    });
+
+    it('should handle multiple lines in one write', function() {
+        parser._write('S0006answer\nA0008protocolT000000000005chord\n');
+
+        var cs = parser.cs;
+        expect(cs.name).to.be.equal('answer');
+        expect(cs.attrList[0].name).to.be.equal('protocol');
+        expect(cs.attrList[0].nodevalue).to.be.equal('chord');
+    });
+
+    it.only('should handle new line in the middle of a raw node', function() {
+        parser._write('S0006answer\n');
+        parser._write('A0008protocolR000000000011bar\nbar\nbar\n');
+        var cs = parser.cs;
+        expect(cs.name).to.be.equal('answer');
+        expect(cs.objectList[0].nodevalue).to.be.equal('bar\nbar\nbar');
+    });
+});
+
 describe('Parser', function() {
     var parser;
 
