@@ -3,7 +3,7 @@ var fs = require('fs');
 var expect = require('chai').expect;
 
 var Parser = require('../src/parser');
-var expectedResultsFilePath = __dirname + '/expected_results.txt';
+var expectedResultsFilePath = __dirname + '/samples/expected_results.txt';
 
 describe('Parser', function() {
     var fixture = fs.readFileSync(expectedResultsFilePath, 'utf-8');

@@ -55,7 +55,7 @@ describe('ConfigSection', function() {
 
     describe('binary', function() {
         it('should match output from python library', function(done) {
-            fs.readFile(__dirname + '/expected_results.txt', 'utf-8',
+            fs.readFile(__dirname + '/samples/expected_results.txt', 'utf-8',
                 function(err, expected) {
                     if (err) {
                         throw err;
@@ -69,7 +69,7 @@ describe('ConfigSection', function() {
     });
 
     describe('getDict', function() {
-        var expectedResults = require('./expected_results_python.json');
+        var expectedResults = require('./samples/expected_results_python.json');
 
         it('should generate a dictionary object', function() {
             var dict = cs.getDict();
