@@ -26,7 +26,6 @@ ConfigSectionBranch.prototype.addCS = function(b) {
     return b;
 };
 
-
 ConfigSectionBranch.prototype.addBranch = function(name) {
     var b = new ConfigSectionBranch(name);
     this.objectList.push(b);
