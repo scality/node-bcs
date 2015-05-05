@@ -1,0 +1,78 @@
+S0006answer
+A0008protocolT000000000005chord
+A0007versionI3
+B0003cmd
+V0002idI5
+V0004typeT000000000006answer
+V0004nameT000000000009get_local
+b
+B0004data
+V0006statusT000000000002ok
+V0008contentsR000000001775{
+    "general": {
+        "n_responders": 500,
+        "n_workers": 500,
+        "split_chunk_size": 33554432,
+        "split_enabled": true,
+        "syslog_facility": "local0",
+        "split_threshold": 67108864
+    },
+    "ring_driver:0": {
+        "alias": "chord",
+        "bstraplist": "10.132.90.17:4250,10.132.90.16:4250,10.132.90.19:4250,10.132.90.15:4250,10.132.90.13:4250,10.132.90.14:4250",
+        "type": "chord"
+    },
+    "ring_driver:1": {
+        "alias": "arc",
+        "arc_schema": 12,
+        "bstraplist": "10.132.90.17:4244,10.132.90.16:4244,10.132.90.19:4244,10.132.90.15:4244,10.132.90.13:4244,10.132.90.14:4244",
+        "main_n_workers": 250,
+        "min_data_part_length": 20000,
+        "n_coding_parts": 3,
+        "n_data_parts": 9,
+        "object_class": 3,
+        "replication_size_threshold": 60000,
+        "sub_n_workers": 250,
+        "type": "arc"
+    },
+    "ring_driver:2": {
+        "alias": "bpchord",
+        "bstraplist": "10.132.90.17:4250,10.132.90.16:4250,10.132.90.19:4250,10.132.90.15:4250,10.132.90.13:4250,10.132.90.14:4250",
+        "by_path_cos": 3,
+        "by_path_enabled": true,
+        "by_path_service_id": "0xC0",
+        "type": "chord"
+    },
+    "ring_driver:3": {
+        "alias": "bparc",
+        "arc_schema": 12,
+        "bstraplist": "10.132.90.17:4244,10.132.90.16:4244,10.132.90.19:4244,10.132.90.15:4244,10.132.90.13:4244,10.132.90.14:4244",
+        "by_path_cos": 3,
+        "by_path_enabled": true,
+        "by_path_service_id": "0xC1",
+        "main_n_workers": 250,
+        "min_data_part_length": 20000,
+        "n_coding_parts": 3,
+        "n_data_parts": 9,
+        "object_class": 3,
+        "replication_size_threshold": 60000,
+        "sub_n_workers": 250,
+        "type": "arc"
+    }
+}
+
+
+V0008metadataR000000000027��Oͽ9D���ia��A-0
+V0005atimeS1429912979
+V0005mtimeS1429912979
+V0005ctimeS1429912979
+V0007versionI64
+V0005crc32I-1153542468
+V0004sizeI1775
+V0006archidT0000000000010
+V0009archidlenI0
+V0011archversionI0
+V0011dataversionI64
+V0005flagsI65536
+b
+s
