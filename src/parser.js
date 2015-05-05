@@ -84,19 +84,28 @@ Parser.prototype._write = function(chunk, encoding, callback) {
 };
 
 Parser.prototype.continueMultiline = function(line) {
-    var newValue = '\n' + line;
-    this.context.setValue(this.context.getValue() + newValue);
+    var value = this.context.getValue();
+    var newSuffix = '\n' + line;
+
+    // if it's a string -- else append buffer
+    if (value instanceof String) {
+        this.context.setValue(value + newSuffix);
+    } else if (value instanceof Buffer) {
+        // not sure if Raw nodes can contain newlines (this may not occur)
+        newSuffix = new Buffer(newSuffix);
+        this.context.setValue(
+            Buffer.concat([value, newSuffix], value.length + newSuffix.length));
+    }
 
     if (this.context.getValue().length === this.context.expectedLength) {
         this.context = this.context.parent; // pop
-    } else {
-        if (line === '') {
-            throw new ConfigSectionException(
-                'Unexpected value found (length doesn\'t match). ' +
-                'Expected ' + this.context.getName() + ' to be ' +
-                this.context.expectedLength +
-                ', got length = ' + this.context.getValue().length);
-        }
+    } else if (this.context.getValue().length > this.context.expectedLength) {
+        throw new ConfigSectionException(
+            'Unexpected value found (length doesn\'t match). ' +
+            'Expected "' + this.context.getName() + '"" ' +
+            'to have length = ' + this.context.expectedLength +
+            ', got length = ' + this.context.getValue().length + '. ' +
+            'Line: ' + this.currentLineNumber);
     }
 };
 
@@ -104,6 +113,8 @@ Parser.prototype.readLine = function(line) {
     var firstLetter = line[0];
     var restOfLine = line.substr(1);
     this.currentLineNumber += 1;
+
+    // console.log(this.currentLineNumber, line);
 
     if (this.context && this.context.isMultiline()) {
         this.continueMultiline(line);
@@ -178,12 +189,12 @@ Parser.prototype.parseTimestamp = function(name, line) {
 };
 
 // Note: text may span multiple lines
-// This just parses the length of the value, and the first
-// chunk of the value up to the end of the first line
+// This just parses the length of the value (always padded to 12),
+// and the first chunk of the value up to the end of the first line
 Parser.prototype.parseTextOrRaw = function(type, name, line) {
-    var length = parseInt(line.substring(0, 12), 10);
+    var expectedLength = parseInt(line.substring(0, 12), 10);
     var data = line.substring(12);
-
+    var actualLength = data.length;
     var node;
 
     switch (type) {
@@ -191,7 +202,17 @@ Parser.prototype.parseTextOrRaw = function(type, name, line) {
             node = this.context.addAttrText(name, data);
             break;
         case CSECTION.RAWNODE:
-            node = this.context.addRaw(name, data);
+            actualLength = Buffer.byteLength(data);
+            // console.log('parseTextOrRaw', data, actualLength, expectedLength);
+            if (actualLength >= expectedLength) { // extra 4 bytes
+                node = this.context.addRaw(name, new Buffer(data));
+            // } else if (actualLength <= expectedLength) {
+            //     // add data including newline
+            //     node = this.context.addRaw(name, new Buffer(data));
+            } else {
+                throw new ConfigSectionException("Raw node length mismatch");
+            }
+
             break;
         case CSECTION.TEXTNODE:
             node = this.context.addText(name, data);
@@ -199,13 +220,13 @@ Parser.prototype.parseTextOrRaw = function(type, name, line) {
     }
 
     // did we get all the text?
-    if (data.length !== length) {
+    if (actualLength < expectedLength) {
         if (type === CSECTION.ATTRTEXT) {
             throw new ConfigSectionException("Attribute text length mismatch");
         } else {
             // values can be multiline
             this.context = node;
-            node.expectedLength = length; // remember for next line
+            node.expectedLength = expectedLength; // remember for next line
         }
     }
 };

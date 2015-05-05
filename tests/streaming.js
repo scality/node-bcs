@@ -57,8 +57,15 @@ describe('Parser', function() {
         });
     });
 
-    it('should be a writeable stream (support pipe to)', function(done) {
-        var readStream = fs.createReadStream(expectedResultsFilePath);
+    // process.once("uncaughtException", function(error) {
+    //     console.log(error);
+    // });
+
+    it.only('should be a writeable stream (support pipe to)', function(done) {
+        var sampleRawFilePath = __dirname + '/samples/raw.txt';
+        var readStream = fs.createReadStream(sampleRawFilePath, {
+            encoding: 'utf-8'
+        });
 
         readStream
         .pipe(parser)
@@ -67,8 +74,9 @@ describe('Parser', function() {
             throw err;
         })
         .on('close', function() {
-            var expected = fs.readFileSync(tempFilePath, 'utf-8');
+            var expected = fs.readFileSync(sampleRawFilePath, 'utf-8');
             var actual = parser.cs.getString();
+            fs.writeFileSync(__dirname + '/../tmp/actual.txt', actual);
             expect(actual).to.be.equal(expected);
             done();
         });
