@@ -145,7 +145,7 @@ ConfigSectionBranch.prototype.getEndString = function() {
     }
 };
 
-ConfigSectionBranch.prototype.getBinary = function() {
+ConfigSectionBranch.prototype.getString = function() {
     var t = this.getType();
 
     if (t === CSECTION.UNK) {
@@ -155,13 +155,13 @@ ConfigSectionBranch.prototype.getBinary = function() {
     var tmp = this.getStartString();
 
     var attrBinaries = this.attrList.map(function(attr) {
-        return attr.getBinary();
+        return attr.getString();
     });
     tmp += attrBinaries.join('');
 
     // object list contains child branches
     var objectBinaries = this.objectList.map(function(obj) {
-        return obj.getBinary();
+        return obj.getString();
     });
     tmp += objectBinaries.join('');
 

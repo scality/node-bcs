@@ -23,7 +23,6 @@
     "mocha-istanbul": "^0.2.0"
   },
   "dependencies": {
-    "event-stream": "^3.3.0",
     "sprintf-js": "^1.0.2"
   }
 }

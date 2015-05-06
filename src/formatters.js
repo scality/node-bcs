@@ -52,9 +52,9 @@ module.exports[CSECTION.TEXTNODE] = function(name, value) {
         value.toString().length, value.toString());
 };
 
-module.exports[CSECTION.RAWNODE] = function(name, value) {
+module.exports[CSECTION.RAWNODE] = function(name, value, length) {
     return sprintf("V%'04d%sR%'012d%s\n", name.length, name,
-        value.toString().length, value);
+        value ? value.length : length, value);
 };
 
 module.exports[CSECTION.TIMESTAMPNODE] = function(name, value) {

@@ -41,7 +41,7 @@ ConfigSectionNode.prototype.isAttr = function() {
     );
 };
 
-ConfigSectionNode.prototype.getBinary = function() {
+ConfigSectionNode.prototype.getString = function() {
     var t = this.getType();
 
     if (t === CSECTION.UNK) {
@@ -53,6 +53,23 @@ ConfigSectionNode.prototype.getBinary = function() {
     }
 
     return formatters[t](this.name, this.nodevalue);
+};
+
+ConfigSectionNode.prototype.getBuffer = function() {
+    var t = this.getType();
+
+    if (this.nodevalue instanceof Buffer) {
+        // use formatter for prefix, but don't convert buffer to string
+        var prefix = formatters[t](this.name, '', this.nodevalue.length);
+        prefix = prefix.substring(0, prefix.length - 1); // remove \n
+        return Buffer.concat([
+            new Buffer(prefix),
+            this.nodevalue,
+            new Buffer('\n')
+        ], prefix.length + this.nodevalue.length + 1);
+    } else {
+        return new Buffer(this.getString());
+    }
 };
 
 // warning: maintains Python compatibility

@@ -2,10 +2,9 @@
 var util = require('util');
 
 // TODO: rename "ConfigSectionError"
-function ConfigSectionException(msg) {
-    this.msg = msg;
+function ConfigSectionException(message) {
+    this.message = message;
 }
 
 util.inherits(ConfigSectionException, Error);
-
 module.exports = ConfigSectionException;
