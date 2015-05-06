@@ -122,7 +122,7 @@ describe('Parser', function() {
 
     it('should be a writeable stream (support pipe to)', function(done) {
         var sampleRawFilePath = __dirname + '/samples/raw1.txt';
-        Parser.parseFile(sampleRawFilePath, function(err, cs) {
+        Parser.parseFile(sampleRawFilePath, null, function(err, cs) {
             if (err) {
                 throw err;
             }
