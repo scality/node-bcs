@@ -93,6 +93,7 @@ ConfigSectionBranch.prototype.addText = function(name, value) {
     return n;
 };
 
+// todo: This should either convert value to Buffer or throw an error
 ConfigSectionBranch.prototype.addRaw = function(name, value) {
     var n = this._addNode(name);
     n.setType(CSECTION.RAWNODE);
@@ -212,6 +213,7 @@ ConfigSectionBranch.prototype.getDictForChild = function(children, objectOrAttr)
     }
 };
 
+// bugbug: can have two children with same name, this will return first
 ConfigSectionBranch.prototype._getChildVal = function(name) {
     for (var i in this.objectList) {
         var obj = this.objectList[i];
@@ -258,6 +260,20 @@ ConfigSectionBranch.prototype.getValString = function(name) {
     }
 
     if (n.getType() === CSECTION.TEXTNODE) {
+        return n.getValue();
+    }
+
+    throw new ConfigSectionException("invalid type");
+};
+
+ConfigSectionBranch.prototype.getValRaw = function(name) {
+    var n = this._getChildVal(name);
+
+    if (n === undefined) {
+        return undefined;
+    }
+
+    if (n.getType() === CSECTION.RAWNODE) {
         return n.getValue();
     }
 

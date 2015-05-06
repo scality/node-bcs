@@ -38,14 +38,18 @@ describe('ConfigSection', function() {
 
     describe('branch', function() {
         it('should return simple data', function() {
-            expect(cs.getBranch('cmd_desc').getValInt('id')).to.equal(1234);
-            expect(cs.getBranch('cmd_desc').getValString('name')).to.equal('STATUS');
-
             var b = cs.getBranch('cmd_desc');
+
+            expect(b.getValInt('id')).to.equal(1234);
+            expect(b.getValString('name')).to.equal('STATUS');
+
             b = b.getBranch('data2');
             b = b.getBranch('data_inside');
             expect(b.getValInt64('quu64')).to.equal(42);
             expect(b.getValBool('quu2')).to.equal(true);
+
+            b.addRaw('test-raw', new Buffer('something'));
+            expect(b.getValRaw('test-raw')).to.be.instanceof(Buffer);
         });
 
         it('should throw error when value has different type', function() {
