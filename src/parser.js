@@ -30,10 +30,9 @@ Parser.parseString = function(s) {
     return parser.parseString(s);
 };
 
-Parser.parseFile = function(filePath, callback) {
+Parser.parseFile = function(filePath, options, callback) {
     var parser = new Parser();
-
-    var readStream = fs.createReadStream(filePath);
+    var readStream = fs.createReadStream(filePath, options);
 
     readStream.pipe(parser)
     .on('error', function(err) {

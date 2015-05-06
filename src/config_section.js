@@ -1,8 +1,10 @@
 'use strict';
+var fs = require('fs');
 var util = require('util');
 
 var CSECTION = require('./node_types');
 var ConfigSectionBranch = require('./branch.js');
+var ConfigSectionReadableStream = require('./readable_stream.js');
 
 function ConfigSection(name) {
     ConfigSection.super_.call(this, name);
@@ -37,4 +39,23 @@ ConfigSection.prototype.getObjectAtIndexPath = function(path) {
     }
 
     return context;
+};
+
+// Convenience function for tests
+ConfigSection.prototype.writeFile = function(filePath, options, callback) {
+    var readStream = new ConfigSectionReadableStream(this);
+    var writeStream = fs.createWriteStream(filePath, options);
+
+    readStream.pipe(writeStream)
+    .on('error', function(err) {
+        console.log('error', err);
+        if (callback) {
+            process.nextTick(callback.call(this, err));
+        }
+    })
+    .on('close', function() {
+        if (callback) {
+            process.nextTick(callback);
+        }
+    });
 };
