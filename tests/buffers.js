@@ -52,20 +52,17 @@ describe('ConfigSection', function() {
         configStream.pipe(writeStream)
         .on('close', function() {
             // read the CS back in
-            var readStream = fs.createReadStream(tempFilePath, 'utf-8');
+            var readStream = fs.createReadStream(tempFilePath);
             var parser = new Parser();
 
             readStream.pipe(parser)
             .on('close', function() {
-
                 // write the image from the new CS
                 var imageObject = cs.objectList[0];
-                var newImageBuffer = imageObject.getBuffer();
-
-                expect(newImageBuffer.length).to.be.equal(imageBuffer.length);
+                expect(imageObject.nodevalue.length).to.be.equal(imageBuffer.length);
 
                 var outputImagePath = __dirname + '/../tmp/output-image.jpg';
-                fs.writeFileSync(outputImagePath, newImageBuffer);
+                fs.writeFileSync(outputImagePath, imageObject.nodevalue);
 
                 // todo: assert equal to original image
                 done();

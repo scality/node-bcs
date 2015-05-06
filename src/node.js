@@ -58,12 +58,13 @@ ConfigSectionNode.prototype.getString = function() {
 ConfigSectionNode.prototype.getBuffer = function() {
     var t = this.getType();
 
-    if (this.value instanceof Buffer) {
-        var prefix = formatters[t](this.name, '');
+    if (this.nodevalue instanceof Buffer) {
+        // use formatter for prefix, but don't convert buffer to string
+        var prefix = formatters[t](this.name, '', this.nodevalue.length);
         return Buffer.concat([
-            prefix,
-            this.value
-        ], prefix.length + this.value.length);
+            new Buffer(prefix),
+            this.nodevalue
+        ], prefix.length + this.nodevalue.length);
     } else {
         return new Buffer(this.getString());
     }
