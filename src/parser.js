@@ -10,7 +10,6 @@ var CSECTION = require('./node_types');
 function Parser(options) {
     Writable.call(this, options);
     this.chunks = [];
-    var self = this;
 }
 
 util.inherits(Parser, Writable);
@@ -61,10 +60,8 @@ Parser.prototype.parse = function(readStream, callback) {
             callback(err);
         });
     })
-    .on('end', function() {
-        process.nextTick(function() {
-            callback(undefined, self.cs);
-        });
+    .on('endCS', function() {
+        callback(undefined, self.cs);
     });
 };
 
@@ -73,15 +70,14 @@ Parser.prototype.parse = function(readStream, callback) {
 // bugbug: make sure handles less than 1 line
 Parser.prototype._write = function(chunk, encoding, callback) {
     if (typeof(chunk) === 'string') {
-        chunk = new Buffer(chunk); // to make testing easier
+        chunk = new Buffer(chunk, "binary"); // to make testing easier
     }
 
     this.chunks.push(chunk);
     this.readNodes();
 
-    if (callback) {
-        process.nextTick(callback);
-    }
+    if (callback)
+        	callback();
 };
 
 Parser.prototype.readNodes = function() {
@@ -117,7 +113,7 @@ Parser.prototype.readLine = function(line) {
             this.context = this.context.parent; // pop
             this.chomp(2); // 'b\n'
             if (!this.context) { // popped past root
-                this.emit('end');
+                this.emit('endCS');
                 this.emit('close');
             }
             return true; // keep reading
