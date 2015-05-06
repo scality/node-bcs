@@ -1,7 +1,6 @@
 'use strict';
 var util = require('util');
 var Writable = require('stream').Writable;
-var es = require('event-stream');
 
 var ConfigSection = require('./config_section');
 var ConfigSectionException = require('./exception');
@@ -9,8 +8,7 @@ var CSECTION = require('./node_types');
 
 function Parser(options) {
     Writable.call(this, options);
-    this.currentLineNumber = 0;
-    this.buffer = new Buffer(0);
+    this.chunks = [];
 
     this.on('finish', function() {
         console.log('finish');
@@ -32,12 +30,13 @@ Parser.parseString = function(s) {
 // leaves this.cs waiting for further input
 Parser.prototype.parseString = function(input) {
     input = input || '';
-    var self = this;
 
-    input.split('\n').forEach(function(line) {
-        self.readLine(line);
-    });
+    if (input[input.length - 1] !== '\n') {
+        input += '\n'; // maybe should throw exception?
+    }
 
+    this.chunks.push(new Buffer(input));
+    this.readNodes();
     return this.cs;
 };
 
@@ -64,130 +63,109 @@ Parser.prototype.parse = function(readStream, callback) {
 // assumes input stream is UTF-8 encoded
 // bugbug: make sure handles less than 1 line
 Parser.prototype._write = function(chunk, encoding, callback) {
-
-    // continue with remainder from last _write
-    this.buffer =
-        Buffer.concat([this.buffer, chunk], this.buffer.length + chunk.length);
-
-    console.log('_write', chunk.length, this.buffer.length);
-
-    if (this.context && this.context.isMultiline()) {
-        this.buffer = this.continueMultiline(this.buffer) || '';
-    }
-
-    var i = this.buffer.indexOf('\n');
-
-    while (i > -1) {
-        var line = this.buffer.substring(0, i);
-        this.readLine(line); // really "readPrefix"
-
-        if (this.context && this.context.isMultiline()) {
-            this.buffer = this.buffer.substring(i); // include the \n
-            this.buffer = this.continueMultiline(this.buffer) || '';
-        } else {
-            this.buffer = this.buffer.substring(i + 1); // chomp the \n
-        }
-
-        i = this.buffer.indexOf('\n');
-        console.log('split again at', i);
-    }
+    this.chunks.push(chunk);
+    this.readNodes();
 
     if (callback) {
         process.nextTick(callback);
     }
 };
 
-// chunk must be buffer so length is calculated correctly
-Parser.prototype.continueMultiline = function(chunk) {
-    var value = this.context.getValue(); // Buffer or String
-    var currentLength = value.length;
-    var expectedLength = this.context.expectedLength;
-    var neededLength = expectedLength - currentLength;
-
-    console.log('continueMultiline chunk', chunk.length);
-
-    // todo: optimize for buffers
-    // if (typeof(value) === 'string') {
-    // var remainder = chunk.toString();
-    // var needed;
-
-    if (neededLength < chunk.length) {
-        var needed = chunk.slice(0, neededLength);
-
-        if (typeof(value) === 'string') {
-            // skip past newline
-            remainder = chunk.slice(neededLength + 1);
-            this.context.setValue(value + needed);
-        } else if (value instanceof Buffer) {
-            this.context.setValue(
-                Buffer.concat([value, needed], value.length + needed.length);
-        }
-        this.context = this.context.parent; // pop
-        console.log('continueMultiline finish', neededLength);
-    } else {
-        needed = chunk;
-        this.context.setValue(value + needed);
-        remainder = null;
-        console.log('continueMultiline ate all', chunk.length);
+Parser.prototype.readNodes = function() {
+    var node = this.readNode();
+    while (node !== null) {
+        node = this.readNode();
     }
+};
 
-    // } else if (value instanceof Buffer) {
-    // todo: optimize for buffer
-
-    return remainder;
+Parser.prototype.readNode = function() {
+    var allChunks = Buffer.concat(this.chunks, this.getAllChunksLength());
+    return this.readLine(allChunks);
 };
 
 // could be called "startNode"
 Parser.prototype.readLine = function(line) {
-    var firstLetter = line[0];
-    var restOfLine = line.substr(1);
-    this.currentLineNumber += 1;
+    if (line.length < 1) {
+        return null;
+    }
+    var firstLetter = line.slice(0, 1).toString();
 
-    console.log('readLine', this.currentLineNumber);
+    console.log('readLine', line.toString());
 
     switch (firstLetter) {
         case 'S': // root
             if (this.cs) {
                 throw new ConfigSectionException("Multiple roots found");
             }
-            this.parseRoot(restOfLine);
-            return;
+            return this.parseRoot(line);
         case 'B': // branch
-            this.parseBranch(restOfLine);
-            return;
+            return this.parseBranch(line);
         case 'b': // end of branch
         case 's': // end of root (section)
             this.context = this.context.parent; // pop
             return;
         case 'V': // value
-            this.parseValue(restOfLine);
-            return;
+            return this.parseValue(line);
         case 'A':  // attribute
-            this.parseAttr(restOfLine);
-            return;
-        case undefined: // EOF
-            return;
+            return this.parseAttr(line);
         default:
             // if we have an incomplete text node
-            throw new ConfigSectionException("invalid line " + line);
+            throw new ConfigSectionException(
+                'invalid line (' + line + '), length: ' + line.length);
     }
 };
 
+Parser.prototype.getAllChunksLength = function() {
+    var sum = 0;
+    for (var i in this.chunks) {
+        sum += this.chunks[i].length;
+    }
+    return sum;
+};
+
+Parser.prototype.chomp = function(length) {
+    console.log('chomp', length);
+    var lengthSoFar = 0;
+    while (lengthSoFar < length) {
+        var lengthNeeded = length - lengthSoFar;
+        if (this.chunks[0].length <= lengthNeeded) {
+            lengthSoFar += this.chunks[0].length;
+            this.chunks.shift();
+        } else {
+            this.chunks[0] = this.chunks[0].slice(lengthNeeded);
+            lengthSoFar += lengthNeeded;
+        }
+    }
+    console.log('chunk length remaining', this.getAllChunksLength());
+};
+
+// helper, does not chomp
 Parser.prototype.parseName = function(line) {
-    var nameLength = parseInt(line.substring(0, 4));
-    return line.substring(4, 4 + nameLength);
+    if (line.length < 5) {
+        return null;
+    }
+    var nameLength = parseInt(line.slice(1, 5).toString());
+    return line.slice(5, 5 + nameLength).toString();
 };
 
 Parser.prototype.parseRoot = function(line) {
     var name = this.parseName(line);
 
-    // should not be anything after name
-    if (line.length > 4 + name.length) {
-        throw new ConfigSectionException("Invalid key in bcs");
+    if (name === null) {
+        return;
     }
 
-    this.cs = new ConfigSection(name);
-    this.context = this.cs;
+    var lengthNeeded = 1 + 4 + name.length + 1;
+
+    if (line.length >= lengthNeeded) {
+        // assert next character is new line
+        this.cs = new ConfigSection(name);
+        this.context = this.cs;
+        this.chomp(lengthNeeded);
+        return this.cs;
+    }
+
+    return;
 };
 
 Parser.prototype.parseBranch = function(line) {
@@ -216,38 +194,37 @@ Parser.prototype.parseTimestamp = function(name, line) {
 // This just parses the length of the value (always padded to 12),
 // and the first chunk of the value up to the end of the first line
 Parser.prototype.parseTextOrRaw = function(type, name, line) {
-    var expectedLength = parseInt(line.substring(0, 12), 10);
-    var data = line.substring(12);
-    var actualLength = data.length;
+    var index = 1 + 4 + name.length + 1; // start of size field
+    var dataLength = parseInt(line.slice(index, index + 12), 10);
+    var totalLength = index + 12 + dataLength;
+
+    if (line.length < totalLength) {
+        return null; // wait for more chunks
+    }
+
+    index += 12;
+    var data = line.slice(index, index + dataLength);
     var node;
 
-    console.log('parseTextOrRaw', name, expectedLength, actualLength);
+    console.log('parseTextOrRaw', name, dataLength, totalLength, line.length);
 
     switch (type) {
         case CSECTION.ATTRTEXT:
-            node = this.context.addAttrText(name, data);
-            break;
-        case CSECTION.RAWNODE:
-            actualLength = Buffer.byteLength(data);
-            node = this.context.addRaw(name, new Buffer(data));
+            // bugbug: preserve buffer for unicode?
+            node = this.context.addAttrText(name, data.toString());
             break;
         case CSECTION.TEXTNODE:
-            node = this.context.addText(name, data);
+            node = this.context.addText(name, data.toString());
+            break;
+        case CSECTION.RAWNODE:
+            node = this.context.addRaw(name, data);
             break;
     }
 
-    // did we get all the text?
-    if (actualLength < expectedLength) {
-        if (type === CSECTION.ATTRTEXT) {
-            throw new ConfigSectionException("Attribute text length mismatch");
-        } else {
-            // values can be multiline
-            this.context = node;
-            node.expectedLength = expectedLength; // remember for next line
-        }
-    } else if (actualLength > expectedLength) {
-        throw new ConfigSectionException('Found data in excess of expected length');
-    }
+    totalLength += 1; // for trailing \n
+    this.chomp(totalLength);
+
+    return node;
 };
 
 Parser.prototype.parseAttr = function(line) {
@@ -280,43 +257,72 @@ Parser.prototype.parseAttr = function(line) {
     }
 };
 
+Parser.prototype._getValueToNewline = function(b, start) {
+    var line = b.toString();
+    var eol = line.indexOf('\n'); // bugbug: perf - converting buffer to string
+    return line.substring(start, eol);
+};
+
 Parser.prototype.parseValue = function(line) {
     if (!this.cs) {
         throw new ConfigSectionException("value without root");
     }
 
     var name = this.parseName(line);
-    var index = 4 + name.length;
-    var typeIndicator = line[index];
-    index += 1;
-    line = line.substring(index);
+
+    if (name == null) {
+        return;
+    }
+
+    var lengthNeeded = 1 + 4 + name.length + 2; // for at least one digit of data
+
+    if (line.length <= lengthNeeded) {
+        return null;
+    }
+
+    var index = 5 + name.length;
+    var typeIndicator = line.slice(index, index + 1).toString();
+    index += 1; // 1 past indicator
+    var stringValue, node;
 
     switch (typeIndicator) {
         case 'I': // integer
-            this.context.addInt(name, parseInt(line, 10));
+            stringValue = this._getValueToNewline(line, index);
+            node = this.context.addInt(name, parseInt(stringValue, 10));
+            this.chomp(index + stringValue.length + 1); // + 1 for \n
             break;
         case 'F':
-            this.context.addFloat(name, parseFloat(line, 10));
+            stringValue = this._getValueToNewline(line, index);
+            node = this.context.addFloat(name, parseFloat(stringValue, 10));
+            this.chomp(index + stringValue.length + 1); // + 1 for \n
             break;
         case 'L':
-            this.context.addInt64(name, parseInt(line, 10));
+            stringValue = this._getValueToNewline(line, index);
+            node = this.context.addInt64(name, parseInt(stringValue, 10));
+            this.chomp(index + stringValue.length + 1); // + 1 for \n
             break;
         case 'B':
-            this.context.addBool(name,
-                parseInt(line.substring(index)) === 0 ? false : true);
-            break;
-        case 'T': // text
-            this.parseTextOrRaw(CSECTION.TEXTNODE, name, line);
-            break;
-        case 'R': // raw
-            this.parseTextOrRaw(CSECTION.RAWNODE, name, line);
+            stringValue = this._getValueToNewline(line, index);
+            node = this.context.addBool(name,
+                parseInt(stringValue) === 0 ? false : true);
+            this.chomp(index + stringValue.length + 1); // + 1 for \n
             break;
         case 'S': // timestamp
-            this.parseTimestamp(name, line);
+            stringValue = this._getValueToNewline(line, index);
+            node = this.parseTimestamp(name, stringValue);
+            this.chomp(index + stringValue.length + 1); // + 1 for \n
+            break;
+        case 'T': // text
+            node = this.parseTextOrRaw(CSECTION.TEXTNODE, name, line);
+            break;
+        case 'R': // raw
+            node = this.parseTextOrRaw(CSECTION.RAWNODE, name, line);
             break;
         default:
             // todo: include line number, or complete line
             throw new ConfigSectionException(
                 "BCS value type not recognized (" + typeIndicator + ")");
     }
+
+    return node;
 };
