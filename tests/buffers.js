@@ -9,6 +9,13 @@ var Parser = require('../src/parser');
 describe('ConfigSection', function() {
     var cs;
 
+    before(function() {
+        var tempPath = __dirname + '/../tmp';
+        if (!fs.existsSync(tempPath)) {
+            fs.mkdirSync(tempPath);
+        }
+    });
+
     beforeEach(function() {
         cs = new ConfigSection('command');
     });

@@ -13,16 +13,9 @@ describe('Generating a large file', function() {
 
     this.timeout(60000); // this takes longer than default 2000ms
 
-    before(function(done) {
-        if (fs.existsSync(tempPath)) {
-            done();
-        } else {
-            fs.mkdir(tempPath, function(err) {
-                if (err) {
-                    throw err;
-                }
-                done();
-            });
+    before(function() {
+        if (!fs.existsSync(tempPath)) {
+            fs.mkdirSync(tempPath);
         }
     });
 
