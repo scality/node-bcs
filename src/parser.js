@@ -77,7 +77,7 @@ Parser.prototype._write = function(chunk, encoding, callback) {
 
 Parser.prototype.readNodes = function() {
     var node = this.readNode();
-    while (node !== null) {
+    while (node) {
         node = this.readNode();
     }
 };
