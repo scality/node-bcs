@@ -136,15 +136,33 @@ describe('Parser', function() {
 
     it('should parse sample with binary data', function(done) {
         var sampleRawFilePath = __dirname + '/samples/raw2.txt';
-        Parser.parseFile(sampleRawFilePath, function(err, cs) {
+        Parser.parseFile(sampleRawFilePath, {
+            encoding: null // no encoding (not UTF-8)
+        }, function(err, cs) {
             if (err) {
                 throw err;
             }
-            var expected = fs.readFileSync(sampleRawFilePath, 'utf-8');
+
+            // this will encode as UTF-8 (formatters[CSECTION.RAWNODE] uses sprintf)
             var actual = cs.getString();
-            fs.writeFileSync(__dirname + '/../tmp/raw2-output.txt', actual);
-            expect(actual).to.be.equal(expected);
-            done();
+
+            // reads to Buffer when encoding not specified
+            var expected = fs.readFileSync(sampleRawFilePath, {
+                encoding: null
+            });
+
+            // expected.toString() encodes as UTF-8
+            expect(actual).to.be.equal(expected.toString());
+
+            // write it to a file so we can visually compare it
+            cs.writeFile(__dirname + '/../tmp/raw2-output.txt', {
+                encoding: null
+            }, function(err) {
+                if (err) {
+                    throw err;
+                }
+                done();
+            });
         });
     });
 
