@@ -13,6 +13,7 @@ function Parser(options) {
     this.buffer = '';
 
     this.on('finish', function() {
+        console.log('finish');
         this.end('');
         this.emit('end');
         this.emit('close');
@@ -44,17 +45,7 @@ Parser.prototype.parse = function(readStream, callback) {
     var self = this;
 
     readStream
-    .pipe(es.split())
-    .pipe(es.mapSync(function(line) {
-        try {
-            // bugbug: what about newlines in middle of raw data
-            self.readLine(line);
-        } catch (err) {
-            // todo: do we need this, or will error bubble to .on('error') ?
-            console.error(err);
-            callback(err);
-        }
-    }))
+    .pipe(this)
     .on('error', function(err) {
         console.error('Error occurred while reading stream', err);
         process.nextTick(function() {
@@ -62,6 +53,7 @@ Parser.prototype.parse = function(readStream, callback) {
         });
     })
     .on('end', function() {
+        console.log('parse end');
         process.nextTick(function() {
             callback(undefined, self.cs);
         });
@@ -75,19 +67,20 @@ Parser.prototype._write = function(chunk, encoding, callback) {
     this.buffer += chunk.toString(); // continue from last time
 
     if (this.context && this.context.isMultiline()) {
-        this.buffer = this.continueMultiline(this.buffer);
+        this.buffer = this.continueMultiline(this.buffer) || '';
     }
 
     var i = this.buffer.indexOf('\n');
 
     while (i > -1) {
-        // if we're reading a binary section, need to pass the newline through
         var line = this.buffer.substring(0, i);
-        this.buffer = this.buffer.substring(i + 1);
         this.readLine(line); // really "readPrefix"
 
         if (this.context && this.context.isMultiline()) {
-            this.buffer = this.continueMultiline(this.buffer);
+            this.buffer = this.buffer.substring(i); // include the \n
+            this.buffer = this.continueMultiline(this.buffer) || '';
+        } else {
+            this.buffer = this.buffer.substring(i + 1); // chomp the \n
         }
 
         i = this.buffer.indexOf('\n');
@@ -105,6 +98,8 @@ Parser.prototype.continueMultiline = function(chunk) {
     var expectedLength = this.context.expectedLength;
     var neededLength = expectedLength - currentLength;
 
+    console.log('continueMultiline chunk', chunk);
+
     // todo: optimize for buffers
     // if (typeof(value) === 'string') {
     var remainder = chunk.toString();
@@ -113,22 +108,24 @@ Parser.prototype.continueMultiline = function(chunk) {
     if (neededLength < remainder.length) {
         needed = chunk.substring(0, neededLength);
         // skip passed newline
-        remainder = remainder(neededLength + 1);
+        remainder = remainder.substring(neededLength + 1);
+        this.context.setValue(value + needed);
         this.context = this.context.parent; // pop
     } else {
         needed = chunk;
+        this.context.setValue(value + needed);
         remainder = null;
     }
 
-    console.log('continueMultiline', needed, remainder);
+    console.log('continueMultiline', needed, 'remainder:', remainder);
 
-    this.context.setValue(value + needed);
     // } else if (value instanceof Buffer) {
     // todo: optimize for buffer
 
     return remainder;
 };
 
+// could be called "startNode"
 Parser.prototype.readLine = function(line) {
     var firstLetter = line[0];
     var restOfLine = line.substr(1);

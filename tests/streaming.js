@@ -11,7 +11,6 @@ var expectedResultsFilePath = __dirname + '/samples/expected_results.txt';
 var tempFilePath = __dirname + '/../tmp/stream_output.txt';
 
 describe('Writeable interface', function() {
-
     var parser;
 
     beforeEach(function() {
@@ -49,12 +48,28 @@ describe('Writeable interface', function() {
         expect(cs.attrList[0].nodevalue).to.be.equal('chord');
     });
 
-    it.only('should handle new line in the middle of a raw node', function() {
+    it('should handle new line in the middle of a raw node', function() {
         parser._write('S0006answer\n');
-        parser._write('A0008protocolR000000000011bar\nbar\nbar\n');
+        parser._write('V0008protocolR000000000011bar\nbar\nbar\n');
         var cs = parser.cs;
         expect(cs.name).to.be.equal('answer');
         expect(cs.objectList[0].nodevalue).to.be.equal('bar\nbar\nbar');
+    });
+
+    it('should handle being interrupted in middle of raw node', function() {
+        parser._write('S0006answer\n');
+        parser._write('V0008protocolR000000000011bar');
+        parser._write('\nb');
+        parser._write('ar\nb');
+        parser._write('ar\n');
+        parser._write('A0009proto');
+        parser._write('col1T000000000004test\n');
+        var cs = parser.cs;
+        expect(cs.name).to.be.equal('answer');
+        expect(cs.objectList[0].name).to.be.equal('protocol');
+        expect(cs.objectList[0].nodevalue).to.be.equal('bar\nbar\nbar');
+        expect(cs.attrList[0].name).to.be.equal('protocol1');
+        expect(cs.attrList[0].nodevalue).to.be.equal('test');
     });
 });
 
@@ -65,7 +80,7 @@ describe('Parser', function() {
         parser = new Parser();
     });
 
-    it('should parse a stream', function(done) {
+    it.skip('should parse a stream', function(done) {
         var stream = new Stream();
 
         parser.parse(stream, function(err, cs) {
