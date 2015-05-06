@@ -5,14 +5,26 @@ var ConfigSectionNode = require('../src/node');
 var CSECTION = require('../src/node_types.js');
 
 describe('ConfigSectionNode', function() {
-    var obj = new ConfigSectionNode('test-name');
+    var node = new ConfigSectionNode('test-name');
 
     it('should be inspectable', function() {
-        obj.setValue('test-value');
-        obj.setType(CSECTION.ATTRTEXT);
-        expect(obj.inspect()).to.equal(
+        node.setValue('test-value');
+        node.setType(CSECTION.ATTRTEXT);
+
+        node.attrList.push(
+            new ConfigSectionNode('child-1')
+        );
+
+        node.objectList.push(
+            new ConfigSectionNode('child-2')
+        );
+
+        expect(node.inspect()).to.equal(
             '{"name":"test-name","type":"ATTRTEXT",' +
-            '"attrList":[],"objectList":[],"value":"test-value"}'
+            '"attrList":[{"name":"child-1","attrList":[],' +
+            '"objectList":[],"value":null}],' +
+            '"objectList":[{"name":"child-2","attrList":[],' +
+            '"objectList":[],"value":null}],"value":"test-value"}'
         );
     });
 });
