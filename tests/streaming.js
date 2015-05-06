@@ -53,7 +53,7 @@ describe('Writeable interface', function() {
         parser._write('V0008protocolR000000000011bar\nbar\nbar\n');
         var cs = parser.cs;
         expect(cs.name).to.be.equal('answer');
-        expect(cs.objectList[0].nodevalue).to.be.equal('bar\nbar\nbar');
+        expect(cs.objectList[0].nodevalue.toString()).to.be.equal('bar\nbar\nbar');
     });
 
     it('should handle being interrupted in middle of raw node', function() {
@@ -67,7 +67,7 @@ describe('Writeable interface', function() {
         var cs = parser.cs;
         expect(cs.name).to.be.equal('answer');
         expect(cs.objectList[0].name).to.be.equal('protocol');
-        expect(cs.objectList[0].nodevalue).to.be.equal('bar\nbar\nbar');
+        expect(cs.objectList[0].nodevalue.toString()).to.be.equal('bar\nbar\nbar');
         expect(cs.attrList[0].name).to.be.equal('protocol1');
         expect(cs.attrList[0].nodevalue).to.be.equal('test');
     });

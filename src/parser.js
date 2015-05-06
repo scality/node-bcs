@@ -63,6 +63,10 @@ Parser.prototype.parse = function(readStream, callback) {
 // assumes input stream is UTF-8 encoded
 // bugbug: make sure handles less than 1 line
 Parser.prototype._write = function(chunk, encoding, callback) {
+    if (typeof(chunk) === 'string') {
+        chunk = new Buffer(chunk); // to make testing easier
+    }
+
     this.chunks.push(chunk);
     this.readNodes();
 
@@ -79,8 +83,11 @@ Parser.prototype.readNodes = function() {
 };
 
 Parser.prototype.readNode = function() {
+    console.log('readNode chunks:', this.chunks.length, this.getAllChunksLength());
     var allChunks = Buffer.concat(this.chunks, this.getAllChunksLength());
-    return this.readLine(allChunks);
+    var node = this.readLine(allChunks);
+    console.log('readNode', node);
+    return node;
 };
 
 // could be called "startNode"
@@ -90,7 +97,7 @@ Parser.prototype.readLine = function(line) {
     }
     var firstLetter = line.slice(0, 1).toString();
 
-    console.log('readLine', firstLetter);
+    console.log('readLine', line.toString());
 
     switch (firstLetter) {
         case 'S': // root
@@ -154,7 +161,7 @@ Parser.prototype.parseRoot = function(line) {
     var name = this.parseName(line);
 
     if (name === null) {
-        return;
+        return null;
     }
 
     var lengthNeeded = 1 + 4 + name.length + 1;
@@ -167,7 +174,7 @@ Parser.prototype.parseRoot = function(line) {
         return this.cs;
     }
 
-    return;
+    return null;
 };
 
 Parser.prototype.parseBranch = function(line) {
