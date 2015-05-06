@@ -142,9 +142,9 @@ describe('Parser', function() {
     });
 
     // TODO
-    it.skip('should throw error for an empty file', function(done) {
-        done();
-    });
+    // it.skip('should throw error for an empty file', function(done) {
+    //     done();
+    // });
 });
 
 describe('ConfigSectionReadableStream', function() {
@@ -173,7 +173,7 @@ describe('ConfigSectionReadableStream', function() {
     });
 
     // TODO
-    it.skip('should stream an empty object', function(done) {
-        done();
-    });
+    // it.skip('should stream an empty object', function(done) {
+    //     done();
+    // });
 });

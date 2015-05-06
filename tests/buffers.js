@@ -34,7 +34,7 @@ describe('ConfigSection', function() {
         });
     });
 
-    it.only('should transmit binary image', function(done) {
+    it('should transmit binary image', function(done) {
         // Add an image to a CS
         var imageFilePath = __dirname + '/samples/win.jpeg';
         var imageBuffer = fs.readFileSync(imageFilePath);

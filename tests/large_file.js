@@ -31,12 +31,13 @@ describe('Generating a large file', function() {
         parser = new Parser();
     });
 
-    // this generates an 18.6MB file
+    // todo: send output to stream (instead of calling getString())
+    // and increase number of objects
     it('should generate from lots of objects', function(done) {
-        for (var i = 0; i < 100; i++) {
+        for (var i = 0; i < 10; i++) {
             var b = cs.addBranch('test-branch' + i);
 
-            for (var j = 0; j < 100; j++) {
+            for (var j = 0; j < 10; j++) {
                 b.addAttrText('test-attr-text', 'test-attr-text');
                 b.addAttrInt('test-attr-int', i * j);
                 b.addAttrInt64('test-attr-int64', i * j);
@@ -47,7 +48,7 @@ describe('Generating a large file', function() {
                 var text = "this is going to be long...";
                 var raw = "this is going to be long..."; // bugbug: should be buffer
 
-                for (var k = 0; k < 100; k++) {
+                for (var k = 0; k < 10; k++) {
                     text += '\nline ' + [i, j, k].join('.');
                     raw += '\nbuffer line ' + [i, j, k].join('.');
                 }
@@ -59,6 +60,7 @@ describe('Generating a large file', function() {
             }
         }
 
+        // using the pipe interface should be much faster
         fs.writeFileSync(tempFile, cs.getString());
         done();
 
@@ -66,7 +68,7 @@ describe('Generating a large file', function() {
         // todo: expect file size
     });
 
-    it.only('should parse lots of objects', function(done) {
+    it('should parse lots of objects', function(done) {
         var readStream = fs.createReadStream(tempFile);
 
         // could also have parser trigger stream events,

@@ -12,8 +12,6 @@ function Parser(options) {
     var self = this;
 
     this.on('finish', function() {
-        console.log('got finish', this.getAllChunksLength());
-
         if (!this.isInternalPipe) {
             self.end('');
         }
@@ -58,12 +56,7 @@ Parser.prototype.parse = function(readStream, callback) {
         });
     })
     .on('end', function() {
-        console.log('parse end', this.getAllChunksLength());
-
-        // self.readNodes();
-
         process.nextTick(function() {
-            console.log("callback");
             callback(undefined, self.cs);
         });
     });
@@ -78,7 +71,6 @@ Parser.prototype._write = function(chunk, encoding, callback) {
     }
 
     this.chunks.push(chunk);
-    console.log('_write', this.chunks.length, chunk.length);
     this.readNodes();
 
     if (callback) {
@@ -94,10 +86,8 @@ Parser.prototype.readNodes = function() {
 };
 
 Parser.prototype.readNode = function() {
-    // console.log('readNode chunks:', this.chunks.length, this.getAllChunksLength());
     var allChunks = Buffer.concat(this.chunks, this.getAllChunksLength());
     var node = this.readLine(allChunks);
-    console.log('readNode', node ? node.name : null);
     return node;
 };
 
@@ -107,8 +97,6 @@ Parser.prototype.readLine = function(line) {
         return null;
     }
     var firstLetter = line.slice(0, 1).toString();
-
-    // console.log('readLine', firstLetter.toString());
 
     switch (firstLetter) {
         case 'S': // root
@@ -120,7 +108,6 @@ Parser.prototype.readLine = function(line) {
             return this.parseBranch(line);
         case 'b': // end of branch
         case 's': // end of root (section)
-            // console.log('context ^', this.context.parent.name);
             this.context = this.context.parent; // pop
             this.chomp(2); // 'b\n'
             return true; // keep reading
@@ -144,8 +131,6 @@ Parser.prototype.getAllChunksLength = function() {
 };
 
 Parser.prototype.chomp = function(length) {
-    console.log('chomp', length);
-    console.log('from', this.chunks.length, this.getAllChunksLength());
     var lengthSoFar = 0;
     while (lengthSoFar < length) {
         var lengthNeeded = length - lengthSoFar;
@@ -158,7 +143,6 @@ Parser.prototype.chomp = function(length) {
             lengthSoFar += lengthNeeded;
         }
     }
-    console.log('chunk length remaining', this.chunks.length, this.getAllChunksLength());
 };
 
 // helper, does not chomp
@@ -202,7 +186,6 @@ Parser.prototype.parseBranch = function(line) {
     if (line.length >= lengthNeeded) {
         // todo: assert next character is new line
         this.context = this.context.addBranch(name);
-        // console.log('context ->', name);
         this.chomp(lengthNeeded);
         return this.context;
     }
@@ -234,8 +217,6 @@ Parser.prototype.parseTextOrRaw = function(type, name, line) {
     index += 12;
     var data = line.slice(index, index + dataLength);
     var node;
-
-    // console.log('parseTextOrRaw', name, dataLength, totalLength, line.length);
 
     switch (type) {
         case CSECTION.ATTRTEXT:
@@ -349,7 +330,6 @@ Parser.prototype.parseValue = function(line) {
             stringValue = this._getValueToNewline(line, index);
             if (stringValue) {
                 node = this.context.addInt(name, parseInt(stringValue, 10));
-                // console.log("got integer, chomping", stringValue, index, stringValue.length, 1);
                 this.chomp(index + stringValue.length + 1); // + 1 for \n
             }
             break;
