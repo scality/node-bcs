@@ -60,7 +60,7 @@ Parser.prototype.parse = function(readStream, callback) {
             callback(err);
         });
     })
-    .on('endCS', function() {
+    .on('close', function() {
         callback(undefined, self.cs);
     });
 };
@@ -113,7 +113,7 @@ Parser.prototype.readLine = function(line) {
             this.context = this.context.parent; // pop
             this.chomp(2); // 'b\n'
             if (!this.context) { // popped past root
-                this.emit('endCS');
+                // this.emit('endCS');
                 this.emit('close');
             }
             return true; // keep reading
