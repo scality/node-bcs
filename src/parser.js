@@ -112,7 +112,7 @@ Parser.prototype.readLine = function(line) {
             // console.log('context ^', this.context.parent.name);
             this.context = this.context.parent; // pop
             this.chomp(2); // 'b\n'
-            return;
+            return true; // keep reading
         case 'V': // value
             return this.parseValue(line);
         case 'A':  // attribute
