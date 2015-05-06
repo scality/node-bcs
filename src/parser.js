@@ -11,15 +11,6 @@ function Parser(options) {
     Writable.call(this, options);
     this.chunks = [];
     var self = this;
-
-    this.on('finish', function() {
-        if (!this.isInternalPipe) {
-            self.end('');
-        }
-
-        self.emit('end');
-        self.emit('close');
-    });
 }
 
 util.inherits(Parser, Writable);
@@ -61,7 +52,6 @@ Parser.prototype.parseString = function(input) {
 
 Parser.prototype.parse = function(readStream, callback) {
     var self = this;
-    this.isInternalPipe = true;
 
     readStream
     .pipe(this)
@@ -126,6 +116,10 @@ Parser.prototype.readLine = function(line) {
         case 's': // end of root (section)
             this.context = this.context.parent; // pop
             this.chomp(2); // 'b\n'
+            if (!this.context) { // popped past root
+                this.emit('end');
+                this.emit('close');
+            }
             return true; // keep reading
         case 'V': // value
             return this.parseValue(line);
