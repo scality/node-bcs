@@ -146,6 +146,15 @@ describe('Value parsing', function() {
         expect(parser.context).to.equal(parser.cs);
     });
 
+    it('should parse unicode text value', function() {
+        parser.parseString('S0004root');
+        // 'おはよう'.length == 4 unicode characters,
+        // but Buffer.byteLength('おはよう') == 12 bytes
+        parser.parseString('V0004nameT000000000012おはよう');
+        var node = parser.cs.objectList[0];
+        expect(node.getValue()).to.equal('おはよう');
+    });
+
     it('should parse multiline text value', function() {
         parser.parseString('S0004root\n');
         parser.parseString('V0004nameT000000000009bar\nbar2\n\n');

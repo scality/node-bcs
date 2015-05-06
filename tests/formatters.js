@@ -39,6 +39,11 @@ describe('Formatters', function() {
         .to.be.equal('V0004nameT000000000004text\n');
     });
 
+    it('formats TEXTNODE with unicode', function() {
+        expect(formatters[CSECTION.TEXTNODE]('name', 'おはよう'))
+        .to.be.equal('V0004nameT000000000004おはよう\n');
+    });
+
     it('formats RAWNODE', function() {
         expect(formatters[CSECTION.RAWNODE]('name', 'text'))
         .to.be.equal('V0004nameR000000000004text\n');
