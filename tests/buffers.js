@@ -34,7 +34,7 @@ describe('ConfigSection', function() {
 
         configStream.pipe(writeStream)
         .on('close', function() {
-            var actual = fs.readFileSync(tempFilePath, 'utf-8');
+            var actual = fs.readFileSync(tempFilePath).toString();
             var expected = 'S0007command\nV0006bufferR000000000007ABCDEFG\ns\n';
             expect(actual).to.be.equal(expected);
             done();

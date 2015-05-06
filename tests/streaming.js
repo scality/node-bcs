@@ -114,7 +114,7 @@ describe('Parser', function() {
             var actual = cs.getString();
 
             // and compare that to the contents of the file
-            var expected = fs.readFileSync(expectedResultsFilePath, 'utf-8');
+            var expected = fs.readFileSync(expectedResultsFilePath).toString();
             expect(actual).to.be.equal(expected);
             done();
         });
@@ -126,7 +126,7 @@ describe('Parser', function() {
             if (err) {
                 throw err;
             }
-            var expected = fs.readFileSync(sampleRawFilePath, 'utf-8');
+            var expected = fs.readFileSync(sampleRawFilePath).toString();
             var actual = cs.getString();
             fs.writeFileSync(__dirname + '/../tmp/raw1-output.txt', actual);
             expect(actual).to.be.equal(expected);
@@ -174,7 +174,7 @@ describe('Parser', function() {
 
 describe('ConfigSectionReadableStream', function() {
     it('should be a readable stream (support pipe from)', function(done) {
-        var readStream = fs.createReadStream(expectedResultsFilePath, 'utf-8');
+        var readStream = fs.createReadStream(expectedResultsFilePath);
         var parser = new Parser();
         var writeStream = fs.createWriteStream(tempFilePath);
 
@@ -189,8 +189,8 @@ describe('ConfigSectionReadableStream', function() {
                 throw err;
             })
             .on('close', function() {
-                var actual = fs.readFileSync(tempFilePath, 'utf-8');
-                var expected = fs.readFileSync(expectedResultsFilePath, 'utf-8');
+                var actual = fs.readFileSync(tempFilePath).toString();
+                var expected = fs.readFileSync(expectedResultsFilePath).toString();
                 expect(actual).to.be.equal(expected);
                 done();
             });

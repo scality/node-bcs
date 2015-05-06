@@ -6,7 +6,7 @@ var Parser = require('../src/parser');
 var expectedResultsFilePath = __dirname + '/samples/expected_results.txt';
 
 describe('Parser', function() {
-    var fixture = fs.readFileSync(expectedResultsFilePath, 'utf-8');
+    var fixture = fs.readFileSync(expectedResultsFilePath).toString();
 
     it('should parse string', function() {
         var cs = Parser.parseString(fixture);

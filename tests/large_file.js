@@ -76,7 +76,7 @@ describe('Generating a large file', function() {
             var actual = cs.getString();
 
             // and compare that to the contents of the file
-            var expected = fs.readFileSync(tempFile, 'utf-8');
+            var expected = fs.readFileSync(tempFile).toString();
             expect(actual.length).to.be.equal(expected.length);
             expect(actual).to.be.equal(expected);
 

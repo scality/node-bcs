@@ -60,17 +60,11 @@ describe('ConfigSection', function() {
     });
 
     describe('binary', function() {
-        it('should match output from python library', function(done) {
-            fs.readFile(__dirname + '/samples/expected_results.txt', 'utf-8',
-                function(err, expected) {
-                    if (err) {
-                        throw err;
-                    }
-                    var actual = cs.getString();
-                    expect(actual).to.be.equal(expected);
-                    done();
-                }
-            );
+        it('should match output from python library', function() {
+            var expected = fs.readFileSync(
+                __dirname + '/samples/expected_results.txt');
+            var actual = cs.getString();
+            expect(actual).to.be.equal(expected.toString());
         });
     });
 
