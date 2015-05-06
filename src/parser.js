@@ -9,9 +9,10 @@ var CSECTION = require('./node_types');
 function Parser(options) {
     Writable.call(this, options);
     this.chunks = [];
+    var self = this;
 
     this.on('finish', function() {
-        // console.log('finish');
+        console.log('got finish', this.getAllChunksLength());
         this.end('');
         this.emit('end');
         this.emit('close');
@@ -52,8 +53,12 @@ Parser.prototype.parse = function(readStream, callback) {
         });
     })
     .on('end', function() {
-        // console.log('parse end');
+        console.log('parse end', this.getAllChunksLength());
+
+        // self.readNodes();
+
         process.nextTick(function() {
+            console.log("callback");
             callback(undefined, self.cs);
         });
     });
@@ -68,6 +73,7 @@ Parser.prototype._write = function(chunk, encoding, callback) {
     }
 
     this.chunks.push(chunk);
+    console.log('_write', this.chunks.length, chunk.length);
     this.readNodes();
 
     if (callback) {
@@ -80,13 +86,17 @@ Parser.prototype.readNodes = function() {
     while (node) {
         node = this.readNode();
     }
+
+    // if (this.getAllChunksLength() !== 0) {
+    //     throw new Error('Leftover chunks');
+    // }
 };
 
 Parser.prototype.readNode = function() {
-    console.log('readNode chunks:', this.chunks.length, this.getAllChunksLength());
+    // console.log('readNode chunks:', this.chunks.length, this.getAllChunksLength());
     var allChunks = Buffer.concat(this.chunks, this.getAllChunksLength());
     var node = this.readLine(allChunks);
-    console.log('readNode', node);
+    console.log('readNode', node ? node.name : null);
     return node;
 };
 
@@ -97,7 +107,7 @@ Parser.prototype.readLine = function(line) {
     }
     var firstLetter = line.slice(0, 1).toString();
 
-    console.log('readLine', line.toString());
+    // console.log('readLine', firstLetter.toString());
 
     switch (firstLetter) {
         case 'S': // root
@@ -133,7 +143,8 @@ Parser.prototype.getAllChunksLength = function() {
 };
 
 Parser.prototype.chomp = function(length) {
-    // console.log('chomp', length);
+    console.log('chomp', length);
+    console.log('from', this.chunks.length, this.getAllChunksLength());
     var lengthSoFar = 0;
     while (lengthSoFar < length) {
         var lengthNeeded = length - lengthSoFar;
@@ -141,11 +152,12 @@ Parser.prototype.chomp = function(length) {
             lengthSoFar += this.chunks[0].length;
             this.chunks.shift();
         } else {
+            // bugbug: lengthNeeded > length
             this.chunks[0] = this.chunks[0].slice(lengthNeeded);
             lengthSoFar += lengthNeeded;
         }
     }
-    // console.log('chunk length remaining', this.getAllChunksLength());
+    console.log('chunk length remaining', this.chunks.length, this.getAllChunksLength());
 };
 
 // helper, does not chomp
@@ -189,7 +201,7 @@ Parser.prototype.parseBranch = function(line) {
     if (line.length >= lengthNeeded) {
         // todo: assert next character is new line
         this.context = this.context.addBranch(name);
-        console.log('context ->', name);
+        // console.log('context ->', name);
         this.chomp(lengthNeeded);
         return this.context;
     }
@@ -214,7 +226,7 @@ Parser.prototype.parseTextOrRaw = function(type, name, line) {
     var dataLength = parseInt(line.slice(index, index + 12), 10);
     var totalLength = index + 12 + dataLength;
 
-    if (line.length < totalLength) {
+    if (line.length < totalLength + 1) { // +1 for trailing \n
         return null; // wait for more chunks
     }
 
@@ -252,7 +264,7 @@ Parser.prototype.parseAttr = function(line) {
     var name = this.parseName(line);
 
     if (name == null) {
-        return;
+        return null;
     }
 
     var lengthNeeded = 1 + 4 + name.length + 2; // for at least one digit of data
@@ -269,18 +281,24 @@ Parser.prototype.parseAttr = function(line) {
     switch (typeIndicator) {
         case 'I': // integer
             stringValue = this._getValueToNewline(line, index);
-            node = this.context.addAttrInt(name, parseInt(stringValue, 10));
-            this.chomp(index + stringValue.length + 1); // + 1 for \n
+            if (stringValue) {
+                node = this.context.addAttrInt(name, parseInt(stringValue, 10));
+                this.chomp(index + stringValue.length + 1); // + 1 for \n
+            }
             break;
         case 'L': // long
             stringValue = this._getValueToNewline(line, index);
-            node = this.context.addAttrInt64(name, parseInt(stringValue, 10));
-            this.chomp(index + stringValue.length + 1); // + 1 for \n
+            if (stringValue) {
+                node = this.context.addAttrInt64(name, parseInt(stringValue, 10));
+                this.chomp(index + stringValue.length + 1); // + 1 for \n
+            }
             break;
         case 'F': // float
             stringValue = this._getValueToNewline(line, index);
-            node = this.context.addAttrFloat(name, parseFloat(stringValue));
-            this.chomp(index + stringValue.length + 1); // + 1 for \n
+            if (stringValue) {
+                node = this.context.addAttrFloat(name, parseFloat(stringValue));
+                this.chomp(index + stringValue.length + 1); // + 1 for \n
+            }
             break;
         case 'T': // text (single line only)
             node = this.parseTextOrRaw(CSECTION.ATTRTEXT, name, line);
@@ -290,10 +308,17 @@ Parser.prototype.parseAttr = function(line) {
     return node;
 };
 
+// warning: may lose \n at end at buffer boundaries
 Parser.prototype._getValueToNewline = function(b, start) {
     var line = b.toString();
     var eol = line.indexOf('\n'); // bugbug: perf - converting buffer to string
-    return line.substring(start, eol);
+
+    if (eol === -1) {
+        // throw new Error("missing newline");
+        return null; // don't have the full line
+    } else {
+        return line.substring(start, eol);
+    }
 };
 
 Parser.prototype.parseValue = function(line) {
@@ -304,7 +329,7 @@ Parser.prototype.parseValue = function(line) {
     var name = this.parseName(line);
 
     if (name == null) {
-        return;
+        return null;
     }
 
     var lengthNeeded = 1 + 4 + name.length + 2; // for at least one digit of data
@@ -321,29 +346,40 @@ Parser.prototype.parseValue = function(line) {
     switch (typeIndicator) {
         case 'I': // integer
             stringValue = this._getValueToNewline(line, index);
-            node = this.context.addInt(name, parseInt(stringValue, 10));
-            this.chomp(index + stringValue.length + 1); // + 1 for \n
+            if (stringValue) {
+                node = this.context.addInt(name, parseInt(stringValue, 10));
+                // console.log("got integer, chomping", stringValue, index, stringValue.length, 1);
+                this.chomp(index + stringValue.length + 1); // + 1 for \n
+            }
             break;
         case 'F':
             stringValue = this._getValueToNewline(line, index);
-            node = this.context.addFloat(name, parseFloat(stringValue, 10));
-            this.chomp(index + stringValue.length + 1); // + 1 for \n
+            if (stringValue) {
+                node = this.context.addFloat(name, parseFloat(stringValue, 10));
+                this.chomp(index + stringValue.length + 1); // + 1 for \n
+            }
             break;
         case 'L':
             stringValue = this._getValueToNewline(line, index);
-            node = this.context.addInt64(name, parseInt(stringValue, 10));
-            this.chomp(index + stringValue.length + 1); // + 1 for \n
+            if (stringValue) {
+                node = this.context.addInt64(name, parseInt(stringValue, 10));
+                this.chomp(index + stringValue.length + 1); // + 1 for \n
+            }
             break;
         case 'B':
             stringValue = this._getValueToNewline(line, index);
-            node = this.context.addBool(name,
-                parseInt(stringValue) === 0 ? false : true);
-            this.chomp(index + stringValue.length + 1); // + 1 for \n
+            if (stringValue) {
+                node = this.context.addBool(name,
+                    parseInt(stringValue) === 0 ? false : true);
+                this.chomp(index + stringValue.length + 1); // + 1 for \n
+            }
             break;
         case 'S': // timestamp
             stringValue = this._getValueToNewline(line, index);
-            node = this.parseTimestamp(name, stringValue);
-            this.chomp(index + stringValue.length + 1); // + 1 for \n
+            if (stringValue) {
+                node = this.parseTimestamp(name, stringValue);
+                this.chomp(index + stringValue.length + 1); // + 1 for \n
+            }
             break;
         case 'T': // text
             node = this.parseTextOrRaw(CSECTION.TEXTNODE, name, line);

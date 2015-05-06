@@ -37,41 +37,36 @@ describe('Generating a large file', function() {
             var b = cs.addBranch('test-branch' + i);
 
             for (var j = 0; j < 100; j++) {
-                b.addInt('test-integer', j);
-
-                var text = "this is going to be long...";
-                var raw = "this is going to be long...";
-
-                for (var k = 0; k < 100; k++) {
-                    text += '\nline ' + k;
-                    raw += '\nline ' + k;
-                }
-
-                b.addText('test-text' + j, text);
-                b.addRaw('test-raw' + j, raw);
                 b.addAttrText('test-attr-text', 'test-attr-text');
                 b.addAttrInt('test-attr-int', i * j);
                 b.addAttrInt64('test-attr-int64', i * j);
                 b.addAttrFloat('test-attr-float', i / (j + 1));
 
+                b.addInt('test-integer', j);
+
+                var text = "this is going to be long...";
+                var raw = "this is going to be long..."; // bugbug: should be buffer
+
+                for (var k = 0; k < 100; k++) {
+                    text += '\nline ' + [i, j, k].join('.');
+                    raw += '\nbuffer line ' + [i, j, k].join('.');
+                }
+
+                b.addText('test-text' + j, text);
+                b.addRaw('test-raw' + j, new Buffer(raw));
+
                 b = b.addBranch('test-branch' + i + '.' + j);
             }
         }
 
-        fs.writeFile(tempFile, cs.getString(),
-            function(err) {
-                if (err) {
-                    throw err;
-                }
-                done();
-            }
-        );
+        fs.writeFileSync(tempFile, cs.getString());
+        done();
 
         // todo: sample memory usage
         // todo: expect file size
     });
 
-    it('should parse lots of objects', function(done) {
+    it.only('should parse lots of objects', function(done) {
         var readStream = fs.createReadStream(tempFile);
 
         // could also have parser trigger stream events,
@@ -86,15 +81,15 @@ describe('Generating a large file', function() {
             var actual = cs.getString();
 
             // and compare that to the contents of the file
-            fs.readFile(tempFile, 'utf-8',
-                function(err, expected) {
-                    if (err) {
-                        throw err;
-                    }
-                    expect(actual).to.be.equal(expected);
-                    done();
-                }
-            );
+            var expected = fs.readFileSync(tempFile, 'utf-8');
+            expect(actual.length).to.be.equal(expected.length);
+            expect(actual).to.be.equal(expected);
+
+            // in case you need to diff the files...
+            fs.writeFileSync(tempPath + '/large_output_actual.txt',
+                cs.getString());
+
+            done();
         });
     });
 });
