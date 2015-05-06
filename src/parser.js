@@ -13,9 +13,13 @@ function Parser(options) {
 
     this.on('finish', function() {
         console.log('got finish', this.getAllChunksLength());
-        this.end('');
-        this.emit('end');
-        this.emit('close');
+
+        if (!this.isInternalPipe) {
+            self.end('');
+        }
+
+        self.emit('end');
+        self.emit('close');
     });
 }
 
@@ -43,6 +47,7 @@ Parser.prototype.parseString = function(input) {
 
 Parser.prototype.parse = function(readStream, callback) {
     var self = this;
+    this.isInternalPipe = true;
 
     readStream
     .pipe(this)
@@ -86,10 +91,6 @@ Parser.prototype.readNodes = function() {
     while (node) {
         node = this.readNode();
     }
-
-    // if (this.getAllChunksLength() !== 0) {
-    //     throw new Error('Leftover chunks');
-    // }
 };
 
 Parser.prototype.readNode = function() {
@@ -215,7 +216,7 @@ Parser.prototype.parseTimestamp = function(name, line) {
         timestamp = -1;
     }
 
-    this.context.addTimestamp(name, timestamp);
+    return this.context.addTimestamp(name, timestamp);
 };
 
 // Note: text may span multiple lines

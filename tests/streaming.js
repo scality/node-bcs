@@ -80,7 +80,7 @@ describe('Parser', function() {
         parser = new Parser();
     });
 
-    it.skip('should parse a stream', function(done) {
+    it('should parse a stream', function(done) {
         var stream = new Stream();
 
         parser.parse(stream, function(err, cs) {
