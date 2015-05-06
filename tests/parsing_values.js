@@ -3,6 +3,7 @@ var assert = require('assert');
 var expect = require('chai').expect;
 
 var ConfigSectionNode = require('../src/node');
+var ConfigSectionBranch = require('../src/branch');
 var CSECTION = require('../src/node_types');
 var Parser = require('../src/parser');
 
@@ -60,6 +61,16 @@ describe('Value parsing', function() {
         var cs = parser.parseString(line);
         expect(cs.getType()).to.equal(CSECTION.ROOT);
         expect(cs.name).to.equal('answer');
+    });
+
+    it('should parse branch', function() {
+        parser.parseString('S0006answer\n');
+        parser.parseString('B0008cmd_desc\n');
+
+        var node = parser.cs.objectList[0];
+        expect(node).to.be.an.instanceof(ConfigSectionBranch);
+        expect(node.getName()).to.equal('cmd_desc');
+        expect(node.getType()).to.equal(CSECTION.BRANCH);
     });
 
     it('should parse Int value', function() {

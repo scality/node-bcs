@@ -11,7 +11,7 @@ function Parser(options) {
     this.chunks = [];
 
     this.on('finish', function() {
-        console.log('finish');
+        // console.log('finish');
         this.end('');
         this.emit('end');
         this.emit('close');
@@ -52,7 +52,7 @@ Parser.prototype.parse = function(readStream, callback) {
         });
     })
     .on('end', function() {
-        console.log('parse end');
+        // console.log('parse end');
         process.nextTick(function() {
             callback(undefined, self.cs);
         });
@@ -90,7 +90,7 @@ Parser.prototype.readLine = function(line) {
     }
     var firstLetter = line.slice(0, 1).toString();
 
-    console.log('readLine', line.toString());
+    console.log('readLine', firstLetter);
 
     switch (firstLetter) {
         case 'S': // root
@@ -102,7 +102,9 @@ Parser.prototype.readLine = function(line) {
             return this.parseBranch(line);
         case 'b': // end of branch
         case 's': // end of root (section)
+            // console.log('context ^', this.context.parent.name);
             this.context = this.context.parent; // pop
+            this.chomp(2); // 'b\n'
             return;
         case 'V': // value
             return this.parseValue(line);
@@ -124,7 +126,7 @@ Parser.prototype.getAllChunksLength = function() {
 };
 
 Parser.prototype.chomp = function(length) {
-    console.log('chomp', length);
+    // console.log('chomp', length);
     var lengthSoFar = 0;
     while (lengthSoFar < length) {
         var lengthNeeded = length - lengthSoFar;
@@ -136,7 +138,7 @@ Parser.prototype.chomp = function(length) {
             lengthSoFar += lengthNeeded;
         }
     }
-    console.log('chunk length remaining', this.getAllChunksLength());
+    // console.log('chunk length remaining', this.getAllChunksLength());
 };
 
 // helper, does not chomp
@@ -158,7 +160,7 @@ Parser.prototype.parseRoot = function(line) {
     var lengthNeeded = 1 + 4 + name.length + 1;
 
     if (line.length >= lengthNeeded) {
-        // assert next character is new line
+        // todo: assert next character is new line
         this.cs = new ConfigSection(name);
         this.context = this.cs;
         this.chomp(lengthNeeded);
@@ -171,12 +173,19 @@ Parser.prototype.parseRoot = function(line) {
 Parser.prototype.parseBranch = function(line) {
     var name = this.parseName(line);
 
-    // should not be anything after name
-    if (line.length > 4 + name.length) {
-        throw new ConfigSectionException("Invalid key in bcs");
+    if (name === null) {
+        return;
     }
 
-    this.context = this.context.addBranch(name);
+    var lengthNeeded = 1 + 4 + name.length + 1;
+
+    if (line.length >= lengthNeeded) {
+        // todo: assert next character is new line
+        this.context = this.context.addBranch(name);
+        console.log('context ->', name);
+        this.chomp(lengthNeeded);
+        return this.context;
+    }
 };
 
 Parser.prototype.parseTimestamp = function(name, line) {
@@ -206,7 +215,7 @@ Parser.prototype.parseTextOrRaw = function(type, name, line) {
     var data = line.slice(index, index + dataLength);
     var node;
 
-    console.log('parseTextOrRaw', name, dataLength, totalLength, line.length);
+    // console.log('parseTextOrRaw', name, dataLength, totalLength, line.length);
 
     switch (type) {
         case CSECTION.ATTRTEXT:
