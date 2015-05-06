@@ -14,10 +14,6 @@ function ConfigSectionNode(name) {
 util.inherits(ConfigSectionNode, ConfigSectionObject);
 module.exports = ConfigSectionNode;
 
-ConfigSectionNode.prototype.isBranch = function() {
-    return false;
-};
-
 ConfigSectionNode.prototype.setType = function(newtype) {
     this.nodetype = newtype;
 };

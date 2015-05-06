@@ -12,10 +12,6 @@ function ConfigSection(name) {
 util.inherits(ConfigSection, ConfigSectionBranch);
 module.exports = ConfigSection;
 
-ConfigSection.prototype.isRoot = function() {
-    return true;
-};
-
 ConfigSection.prototype.getObjectAtIndexPath = function(path) {
     if (path.trim().length === 0) {
         return this;

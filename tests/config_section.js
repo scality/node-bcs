@@ -40,6 +40,12 @@ describe('ConfigSection', function() {
         it('should return simple data', function() {
             expect(cs.getBranch('cmd_desc').getValInt('id')).to.equal(1234);
             expect(cs.getBranch('cmd_desc').getValString('name')).to.equal('STATUS');
+
+            var b = cs.getBranch('cmd_desc');
+            b = b.getBranch('data2');
+            b = b.getBranch('data_inside');
+            expect(b.getValInt64('quu64')).to.equal(42);
+            expect(b.getValBool('quu2')).to.equal(true);
         });
 
         it('should throw error when value has different type', function() {

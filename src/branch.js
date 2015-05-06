@@ -16,10 +16,6 @@ function ConfigSectionBranch(name) {
 util.inherits(ConfigSectionBranch, ConfigSectionObject);
 module.exports = ConfigSectionBranch;
 
-ConfigSectionBranch.prototype.isBranch = function() {
-    return true;
-};
-
 ConfigSectionBranch.prototype.addCS = function(b) {
     this.objectList.push(b);
     b.parent = this; // todo: getter setter?
@@ -225,30 +221,6 @@ ConfigSectionBranch.prototype._getChildVal = function(name) {
     }
     return undefined;
 };
-
-// TODO: replace with filter and map
-// ConfigSectionBranch.prototype._iter = function(t) {
-//     for (i in this.objectList) {
-//         if t == i.getType() {
-//             yield i
-//     }
-// }
-
-// ConfigSectionBranch.prototype.iterBranch = function() {
-//     return this._iter(CSECTION.BRANCH)
-
-// ConfigSectionBranch.prototype.iterAll = function() {
-//     for i in this.objectList:
-//         yield i
-
-// ConfigSectionBranch.prototype.iterValInt = function() {
-//     return this._iter(CSECTION.INTNODE)
-
-// ConfigSectionBranch.prototype.iterValInt64 = function() {
-//     return this._iter(CSECTION.INT64NODE)
-
-// ConfigSectionBranch.prototype.iterValText = function() {
-//     return this._iter(CSECTION.TEXTNODE)
 
 ConfigSectionBranch.prototype.getValInt = function(name) {
     var n = this._getChildVal(name);
