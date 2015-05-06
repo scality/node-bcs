@@ -76,8 +76,9 @@ Parser.prototype._write = function(chunk, encoding, callback) {
     this.chunks.push(chunk);
     this.readNodes();
 
-    if (callback)
-        	callback();
+    if (callback) {
+        callback();
+    }
 };
 
 Parser.prototype.readNodes = function() {
@@ -88,6 +89,8 @@ Parser.prototype.readNodes = function() {
 };
 
 Parser.prototype.readNode = function() {
+    // TODO: (perf optimization) don't concat now - too expensive for large buffers
+    // wait until size of all buffers exceeds the size of the raw data we need
     var allChunks = Buffer.concat(this.chunks, this.getAllChunksLength());
     var node = this.readLine(allChunks);
     return node;
@@ -221,6 +224,9 @@ Parser.prototype.parseTextOrRaw = function(type, name, line) {
     }
 
     index += 12;
+
+    // TODO: (perf optimization) only now should we concat chunks
+    // (and only if necessary to get all data)
     var data = line.slice(index, index + dataLength);
     var node;
 
