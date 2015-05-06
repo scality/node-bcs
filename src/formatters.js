@@ -48,6 +48,8 @@ module.exports[CSECTION.ATTRFLOAT] = function(name, value) {
 };
 
 module.exports[CSECTION.TEXTNODE] = function(name, value) {
+    // note: only ASCII text is supported
+    // (length will be incorrect for unicode characters)
     return sprintf("V%'04d%sT%'012d%s\n", name.length, name,
         value.toString().length, value.toString());
 };
