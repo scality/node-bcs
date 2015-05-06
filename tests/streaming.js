@@ -121,21 +121,28 @@ describe('Parser', function() {
     });
 
     it('should be a writeable stream (support pipe to)', function(done) {
-        var sampleRawFilePath = __dirname + '/samples/raw.txt';
-        var readStream = fs.createReadStream(sampleRawFilePath, {
-            encoding: 'utf-8'
-        });
-
-        readStream
-        .pipe(parser)
-        .on('error', function(err) {
-            console.log('error', err);
-            throw err;
-        })
-        .on('close', function() {
+        var sampleRawFilePath = __dirname + '/samples/raw1.txt';
+        Parser.parseFile(sampleRawFilePath, function(err, cs) {
+            if (err) {
+                throw err;
+            }
             var expected = fs.readFileSync(sampleRawFilePath, 'utf-8');
-            var actual = parser.cs.getString();
-            fs.writeFileSync(__dirname + '/../tmp/actual.txt', actual);
+            var actual = cs.getString();
+            fs.writeFileSync(__dirname + '/../tmp/raw1-output.txt', actual);
+            expect(actual).to.be.equal(expected);
+            done();
+        });
+    });
+
+    it('should parse sample with binary data', function(done) {
+        var sampleRawFilePath = __dirname + '/samples/raw2.txt';
+        Parser.parseFile(sampleRawFilePath, function(err, cs) {
+            if (err) {
+                throw err;
+            }
+            var expected = fs.readFileSync(sampleRawFilePath, 'utf-8');
+            var actual = cs.getString();
+            fs.writeFileSync(__dirname + '/../tmp/raw2-output.txt', actual);
             expect(actual).to.be.equal(expected);
             done();
         });

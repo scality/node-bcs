@@ -1,4 +1,5 @@
 'use strict';
+var fs = require('fs');
 var util = require('util');
 var Writable = require('stream').Writable;
 
@@ -27,6 +28,22 @@ module.exports = Parser;
 Parser.parseString = function(s) {
     var parser = new Parser();
     return parser.parseString(s);
+};
+
+Parser.parseFile = function(filePath, callback) {
+    var parser = new Parser();
+
+    var readStream = fs.createReadStream(filePath);
+
+    readStream.pipe(parser)
+    .on('error', function(err) {
+        callback(err);
+    })
+    .on('close', function() {
+        callback(undefined, parser.cs);
+    });
+
+    return parser;
 };
 
 // assumes nodes in string are terminated properly
