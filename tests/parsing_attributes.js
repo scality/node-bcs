@@ -13,8 +13,8 @@ describe('Attribute parsing', function() {
     });
 
     it('should parse integer', function() {
-        parser.readLine('S0004root');
-        parser.readLine('A0004nameI42');
+        parser.parseString('S0004root');
+        parser.parseString('A0004nameI42');
         var node = parser.cs.attrList[0];
         expect(node).to.be.an.instanceof(ConfigSectionNode);
         expect(node.getName()).to.equal('name');
@@ -23,8 +23,8 @@ describe('Attribute parsing', function() {
     });
 
     it('should parse long integer value', function() {
-        parser.readLine('S0004root');
-        parser.readLine('A0004nameL42');
+        parser.parseString('S0004root');
+        parser.parseString('A0004nameL42');
         var node = parser.cs.attrList[0];
         expect(node).to.be.an.instanceof(ConfigSectionNode);
         expect(node.getName()).to.equal('name');
@@ -33,8 +33,8 @@ describe('Attribute parsing', function() {
     });
 
     it('should parse float', function() {
-        parser.readLine('S0004root');
-        parser.readLine('A0004nameF1.234567890');
+        parser.parseString('S0004root');
+        parser.parseString('A0004nameF1.234567890');
         var node = parser.cs.attrList[0];
         expect(node).to.be.an.instanceof(ConfigSectionNode);
         expect(node.getName()).to.equal('name');
@@ -43,8 +43,8 @@ describe('Attribute parsing', function() {
     });
 
     it('should parse single line text value', function() {
-        parser.readLine('S0004root');
-        parser.readLine('A0004nameT000000000011justoneline');
+        parser.parseString('S0004root');
+        parser.parseString('A0004nameT000000000011justoneline');
         var node = parser.cs.attrList[0];
         expect(node).to.be.an.instanceof(ConfigSectionNode);
         expect(node.getName()).to.equal('name');

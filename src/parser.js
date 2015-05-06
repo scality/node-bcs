@@ -227,34 +227,51 @@ Parser.prototype.parseTextOrRaw = function(type, name, line) {
     return node;
 };
 
+// todo: very similar to parseValue - should be refactored
 Parser.prototype.parseAttr = function(line) {
     if (!this.cs) {
         throw new ConfigSectionException("Attribute without root");
     }
 
     var name = this.parseName(line);
-    var index = 4 + name.length;
-    var typeIndicator = line[index];
-    index += 1;
-    line = line.substring(index);
+
+    if (name == null) {
+        return;
+    }
+
+    var lengthNeeded = 1 + 4 + name.length + 2; // for at least one digit of data
+
+    if (line.length <= lengthNeeded) {
+        return null;
+    }
+
+    var index = 5 + name.length;
+    var typeIndicator = line.slice(index, index + 1).toString();
+    index += 1; // 1 past indicator
+    var stringValue, node;
 
     switch (typeIndicator) {
         case 'I': // integer
-            var value = parseInt(line, 10);
-            this.context.addAttrInt(name, value);
+            stringValue = this._getValueToNewline(line, index);
+            node = this.context.addAttrInt(name, parseInt(stringValue, 10));
+            this.chomp(index + stringValue.length + 1); // + 1 for \n
             break;
         case 'L': // long
-            value = parseInt(line);
-            this.context.addAttrInt64(name, value);
-            break;
-        case 'T': // text (single line only)
-            this.parseTextOrRaw(CSECTION.ATTRTEXT, name, line);
+            stringValue = this._getValueToNewline(line, index);
+            node = this.context.addAttrInt64(name, parseInt(stringValue, 10));
+            this.chomp(index + stringValue.length + 1); // + 1 for \n
             break;
         case 'F': // float
-            value = parseFloat(line);
-            this.context.addAttrFloat(name, value);
+            stringValue = this._getValueToNewline(line, index);
+            node = this.context.addAttrFloat(name, parseFloat(stringValue));
+            this.chomp(index + stringValue.length + 1); // + 1 for \n
+            break;
+        case 'T': // text (single line only)
+            node = this.parseTextOrRaw(CSECTION.ATTRTEXT, name, line);
             break;
     }
+
+    return node;
 };
 
 Parser.prototype._getValueToNewline = function(b, start) {
