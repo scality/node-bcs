@@ -10,7 +10,7 @@ var CSECTION = require('./node_types');
 function Parser(options) {
     Writable.call(this, options);
     this.currentLineNumber = 0;
-    this.buffer = '';
+    this.buffer = new Buffer(0);
 
     this.on('finish', function() {
         console.log('finish');
@@ -64,7 +64,12 @@ Parser.prototype.parse = function(readStream, callback) {
 // assumes input stream is UTF-8 encoded
 // bugbug: make sure handles less than 1 line
 Parser.prototype._write = function(chunk, encoding, callback) {
-    this.buffer += chunk.toString(); // continue from last time
+
+    // continue with remainder from last _write
+    this.buffer =
+        Buffer.concat([this.buffer, chunk], this.buffer.length + chunk.length);
+
+    console.log('_write', chunk.length, this.buffer.length);
 
     if (this.context && this.context.isMultiline()) {
         this.buffer = this.continueMultiline(this.buffer) || '';
@@ -92,32 +97,39 @@ Parser.prototype._write = function(chunk, encoding, callback) {
     }
 };
 
+// chunk must be buffer so length is calculated correctly
 Parser.prototype.continueMultiline = function(chunk) {
-    var value = this.context.getValue();
+    var value = this.context.getValue(); // Buffer or String
     var currentLength = value.length;
     var expectedLength = this.context.expectedLength;
     var neededLength = expectedLength - currentLength;
 
-    console.log('continueMultiline chunk', chunk);
+    console.log('continueMultiline chunk', chunk.length);
 
     // todo: optimize for buffers
     // if (typeof(value) === 'string') {
-    var remainder = chunk.toString();
-    var needed;
+    // var remainder = chunk.toString();
+    // var needed;
 
-    if (neededLength < remainder.length) {
-        needed = chunk.substring(0, neededLength);
-        // skip passed newline
-        remainder = remainder.substring(neededLength + 1);
-        this.context.setValue(value + needed);
+    if (neededLength < chunk.length) {
+        var needed = chunk.slice(0, neededLength);
+
+        if (typeof(value) === 'string') {
+            // skip past newline
+            remainder = chunk.slice(neededLength + 1);
+            this.context.setValue(value + needed);
+        } else if (value instanceof Buffer) {
+            this.context.setValue(
+                Buffer.concat([value, needed], value.length + needed.length);
+        }
         this.context = this.context.parent; // pop
+        console.log('continueMultiline finish', neededLength);
     } else {
         needed = chunk;
         this.context.setValue(value + needed);
         remainder = null;
+        console.log('continueMultiline ate all', chunk.length);
     }
-
-    console.log('continueMultiline', needed, 'remainder:', remainder);
 
     // } else if (value instanceof Buffer) {
     // todo: optimize for buffer
@@ -131,7 +143,7 @@ Parser.prototype.readLine = function(line) {
     var restOfLine = line.substr(1);
     this.currentLineNumber += 1;
 
-    console.log('readLine', this.currentLineNumber, line);
+    console.log('readLine', this.currentLineNumber);
 
     switch (firstLetter) {
         case 'S': // root

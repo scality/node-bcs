@@ -54,13 +54,18 @@ describe('ConfigSection', function() {
             // read the CS back in
             var readStream = fs.createReadStream(tempFilePath, 'utf-8');
             var parser = new Parser();
+
             readStream.pipe(parser)
             .on('close', function() {
 
                 // write the image from the new CS
                 var imageObject = cs.objectList[0];
+                var newImageBuffer = imageObject.getBuffer();
+
+                expect(newImageBuffer.length).to.be.equal(imageBuffer.length);
+
                 var outputImagePath = __dirname + '/../tmp/output-image.jpg';
-                fs.writeFileSync(outputImagePath, imageObject.getBuffer());
+                fs.writeFileSync(outputImagePath, newImageBuffer);
 
                 // todo: assert equal to original image
                 done();
