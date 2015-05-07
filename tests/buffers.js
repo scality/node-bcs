@@ -51,6 +51,8 @@ describe('ConfigSection', function() {
         then, remove ".skip" below
     */
     it.skip('should transmit binary image', function(done) {
+        this.timeout(10000);
+
         // Add an image to a CS
         var imageFilePath = __dirname + '/samples/large-earth.png';
         var imageBuffer = fs.readFileSync(imageFilePath);
