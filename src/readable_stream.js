@@ -46,19 +46,21 @@ ConfigSectionReadableStream.prototype._read = function(size) {
         this.pushIndexPath(); // process my first child next
     } else if (t === CSECTION.RAWNODE &&
         context.getValue() instanceof Readable) {
+        var stream = context.getValue();
+
         if (this.isStreamingFromContext) {
             // continue streaming
-            this._readFromStream(context, size);
+            this._readFromStream(stream, size);
         } else {
             // start streaming
             this.push(context.getPrefix());
             this.isStreamingFromContext = true; // read from stream next time
 
-            context.getValue().on('readable', function() {
-                self._readFromStream(context, size); // using the last size?
+            stream.on('readable', function() {
+                self._readFromStream(stream, size); // using the last size?
             });
 
-            context.getValue().on('end', function() {
+            stream.on('end', function() {
                 self.isStreamingFromContext = false;
                 self.incrementIndexPath(); // to my next sibling
                 self.push('\n');
@@ -70,8 +72,7 @@ ConfigSectionReadableStream.prototype._read = function(size) {
     }
 };
 
-ConfigSectionReadableStream.prototype._readFromStream = function(context, size) {
-    var stream = context.getValue();
+ConfigSectionReadableStream.prototype._readFromStream = function(stream, size) {
     var data = stream.read(size);
 
     if (data) {
