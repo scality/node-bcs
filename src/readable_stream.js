@@ -22,6 +22,7 @@ module.exports = ConfigSectionReadableStream;
 // Currently, this returns one node (the entire value) every time.
 // So, this could be optimized using a loop to return the requested bytes.
 ConfigSectionReadableStream.prototype._read = function(size) {
+    var self = this;
     var context = this.cs.getObjectAtIndexPath(this.indexPath);
 
     if (!context) {
@@ -45,16 +46,23 @@ ConfigSectionReadableStream.prototype._read = function(size) {
         this.pushIndexPath(); // process my first child next
     } else if (t === CSECTION.RAWNODE &&
         context.getValue() instanceof Readable) {
-        if (!this.isStreamingFromContext) {
+        if (this.isStreamingFromContext) {
+            // continue streaming
+            this._readFromStream(context, size);
+        } else {
             // start streaming
             this.push(context.getPrefix());
             this.isStreamingFromContext = true; // read from stream next time
-        } else {
-            // continue streaming
-            this.isStreamingFromContext = this._readFromStream(context, size);
-            if (!this.isStreamingFromContext) { // all done
-                this.incrementIndexPath(); // to my next sibling
-            }
+
+            context.getValue().on('readable', function() {
+                self._readFromStream(context, size); // using the last size?
+            });
+
+            context.getValue().on('end', function() {
+                self.isStreamingFromContext = false;
+                self.incrementIndexPath(); // to my next sibling
+                self.push('\n');
+            });
         }
     } else { // attribute or object
         this.push(context.getBuffer()); // connect stream if available
@@ -63,18 +71,11 @@ ConfigSectionReadableStream.prototype._read = function(size) {
 };
 
 ConfigSectionReadableStream.prototype._readFromStream = function(context, size) {
-    var data = context.getValue().read(size);
-
-    if (!data) { // try again without size
-        data = context.getValue().read();
-    }
+    var stream = context.getValue();
+    var data = stream.read(size);
 
     if (data) {
         this.push(data);
-        return true;
-    } else { // done reading
-        this.push('\n');
-        return false;
     }
 };
 

@@ -42,33 +42,26 @@ describe('ConfigSection', function() {
     });
 
     it('should accept a readableStream as a raw value', function(done) {
+        // replace with '/samples/large-earth.png' for 100MB file
         var imageStream = fs.createReadStream(__dirname + '/samples/win.jpeg');
-        var expectedLength = 9065;
+        var expectedLength = 9065; // replace with 113357104 for large file
         cs.addRaw('image', imageStream, expectedLength);
-        var isFirst = true;
 
-        imageStream
-        .on('readable', function() {
-            if (!isFirst) {
-                return;
-            }
-            isFirst = false;
+        // write cs to temp file
+        var tempFilePath = __dirname + '/../tmp/cs_with_streamed_image.raw';
 
-            // write cs to temp file
-            var tempFilePath = __dirname + '/../tmp/cs_with_streamed_image.raw';
+        cs.writeFile(tempFilePath, null, function() {
+            // read temp file to verify
+            Parser.parseFile(tempFilePath, null, function(err, cs) {
+                var buffer = cs.getValRaw('image');
+                expect(buffer).to.be.instanceof(Buffer);
+                expect(buffer.length).to.be.equal(expectedLength);
+                // so we can check image not corrupted
+                // replace with /../tmp/output.png for large file
+                var outputImagePath = __dirname + '/../tmp/out.jpeg';
+                fs.writeFileSync(outputImagePath, buffer);
 
-            cs.writeFile(tempFilePath, null, function() {
-                // read temp file to verify
-                Parser.parseFile(tempFilePath, null, function(err, cs) {
-                    var buffer = cs.getValRaw('image');
-                    expect(buffer).to.be.instanceof(Buffer);
-                    expect(buffer.length).to.be.equal(expectedLength);
-                    // so we can check image not corrupted
-                    var outputImagePath = __dirname + '/../tmp/win-out.jpeg';
-                    fs.writeFileSync(outputImagePath, buffer);
-
-                    done();
-                });
+                done();
             });
         });
     });
