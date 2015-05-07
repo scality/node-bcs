@@ -69,6 +69,7 @@ Parser.prototype.parse = function(readStream, callback) {
 // assumes input stream is UTF-8 encoded
 // bugbug: make sure handles less than 1 line
 Parser.prototype._write = function(chunk, encoding, callback) {
+    // console.log('_write', chunk.length);
     if (typeof(chunk) === 'string') {
         chunk = new Buffer(chunk, "binary"); // to make testing easier
     }
@@ -89,45 +90,43 @@ Parser.prototype.readNodes = function() {
 };
 
 Parser.prototype.readNode = function() {
-    // TODO: (perf optimization) don't concat now - too expensive for large buffers
-    // wait until size of all buffers exceeds the size of the raw data we need
-    var allChunks = Buffer.concat(this.chunks, this.getAllChunksLength());
-    var node = this.readLine(allChunks);
+    var node = this.readLine();
+    // console.log('readNode', node);
     return node;
 };
 
 // could be called "startNode"
-Parser.prototype.readLine = function(line) {
-    if (line.length < 1) {
+Parser.prototype.readLine = function() {
+    if (this.getAllChunksLength() < 1) {
         return null;
     }
-    var firstLetter = line.slice(0, 1).toString();
+    var firstLetter = this.chunks[0].slice(0, 1).toString();
+    // console.log(firstLetter);
 
     switch (firstLetter) {
         case 'S': // root
             if (this.cs) {
                 throw new ConfigSectionException("Multiple roots found");
             }
-            return this.parseRoot(line);
+            return this.parseRoot();
         case 'B': // branch
-            return this.parseBranch(line);
+            return this.parseBranch();
         case 'b': // end of branch
         case 's': // end of root (section)
             this.context = this.context.parent; // pop
             this.chomp(2); // 'b\n'
             if (!this.context) { // popped past root
-                // this.emit('endCS');
                 this.emit('close');
             }
             return true; // keep reading
         case 'V': // value
-            return this.parseValue(line);
+            return this.parseValue();
         case 'A':  // attribute
-            return this.parseAttr(line);
+            return this.parseAttr();
         default:
             // if we have an incomplete text node
             throw new ConfigSectionException(
-                'invalid line (' + line + '), length: ' + line.length);
+                'invalid line (starts with ' + firstLetter + ')');
     }
 };
 
@@ -139,7 +138,23 @@ Parser.prototype.getAllChunksLength = function() {
     return sum;
 };
 
+// if we can satisfy the request with the first buffer, return it.
+// otherwise concat all of them
+Parser.prototype.concatBufferForLength = function(n) {
+    // console.log('concatBufferForLength', n, this.chunks[0].length);
+    if (n <= this.chunks[0].length) {
+        // console.log('return first chunk', n);
+        return this.chunks[0];
+    } else if (n <= this.getAllChunksLength()) {
+        // console.log('concating!', n);
+        return Buffer.concat(this.chunks);
+    } else {
+        throw new Error('asked for too much: ' + n);
+    }
+};
+
 Parser.prototype.chomp = function(length) {
+    // console.log('chomp', length, 'from', this.getAllChunksLength());
     var lengthSoFar = 0;
     while (lengthSoFar < length) {
         var lengthNeeded = length - lengthSoFar;
@@ -155,16 +170,25 @@ Parser.prototype.chomp = function(length) {
 };
 
 // helper, does not chomp
-Parser.prototype.parseName = function(line) {
-    if (line.length < 5) {
+Parser.prototype.parseName = function() {
+    if (this.getAllChunksLength() < 5) {
         return null;
     }
+    var line = this.concatBufferForLength(5);
     var nameLength = parseInt(line.slice(1, 5).toString());
-    return line.slice(5, 5 + nameLength).toString();
+
+    if (this.getAllChunksLength() < 5 + nameLength) {
+        return null;
+    }
+
+    line = this.concatBufferForLength(5 + nameLength);
+    var name = line.slice(5, 5 + nameLength).toString();
+    // console.log('parseName', line, nameLength, name);
+    return name;
 };
 
-Parser.prototype.parseRoot = function(line) {
-    var name = this.parseName(line);
+Parser.prototype.parseRoot = function() {
+    var name = this.parseName();
 
     if (name === null) {
         return null;
@@ -172,7 +196,7 @@ Parser.prototype.parseRoot = function(line) {
 
     var lengthNeeded = 1 + 4 + name.length + 1;
 
-    if (line.length >= lengthNeeded) {
+    if (this.getAllChunksLength() >= lengthNeeded) {
         // todo: assert next character is new line
         this.cs = new ConfigSection(name);
         this.context = this.cs;
@@ -183,8 +207,8 @@ Parser.prototype.parseRoot = function(line) {
     return null;
 };
 
-Parser.prototype.parseBranch = function(line) {
-    var name = this.parseName(line);
+Parser.prototype.parseBranch = function() {
+    var name = this.parseName();
 
     if (name === null) {
         return;
@@ -192,7 +216,7 @@ Parser.prototype.parseBranch = function(line) {
 
     var lengthNeeded = 1 + 4 + name.length + 1;
 
-    if (line.length >= lengthNeeded) {
+    if (this.getAllChunksLength() >= lengthNeeded) {
         // todo: assert next character is new line
         this.context = this.context.addBranch(name);
         this.chomp(lengthNeeded);
@@ -200,8 +224,8 @@ Parser.prototype.parseBranch = function(line) {
     }
 };
 
-Parser.prototype.parseTimestamp = function(name, line) {
-    var timestamp = parseInt(line, 10);
+Parser.prototype.parseTimestamp = function(name, stringValue) {
+    var timestamp = parseInt(stringValue, 10);
 
     // weird check for arbitrary future time
     if (timestamp > (new Date().getTime() / 1000) * 2) {
@@ -214,19 +238,25 @@ Parser.prototype.parseTimestamp = function(name, line) {
 // Note: text may span multiple lines
 // This just parses the length of the value (always padded to 12),
 // and the first chunk of the value up to the end of the first line
-Parser.prototype.parseTextOrRaw = function(type, name, line) {
-    var index = 1 + 4 + name.length + 1; // start of size field
+Parser.prototype.parseTextOrRaw = function(type, name) {
+    var lengthSoFar = 1 + 4 + name.length;
+
+    // 12 for size, at least 1 for data
+    if (this.getAllChunksLength() < lengthSoFar + 13) {
+        return null;
+    }
+
+    var line = this.concatBufferForLength(lengthSoFar + 13);
+    var index = lengthSoFar + 1; // start of size field
     var dataLength = parseInt(line.slice(index, index + 12), 10);
     var totalLength = index + 12 + dataLength;
 
-    if (line.length < totalLength + 1) { // +1 for trailing \n
+    if (this.getAllChunksLength() < totalLength + 1) { // +1 for trailing \n
         return null; // wait for more chunks
     }
 
     index += 12;
-
-    // TODO: (perf optimization) only now should we concat chunks
-    // (and only if necessary to get all data)
+    line = this.concatBufferForLength(totalLength + 1);
     var data = line.slice(index, index + dataLength);
     var node;
 
@@ -250,12 +280,12 @@ Parser.prototype.parseTextOrRaw = function(type, name, line) {
 };
 
 // todo: very similar to parseValue - should be refactored
-Parser.prototype.parseAttr = function(line) {
+Parser.prototype.parseAttr = function() {
     if (!this.cs) {
         throw new ConfigSectionException("Attribute without root");
     }
 
-    var name = this.parseName(line);
+    var name = this.parseName();
 
     if (name == null) {
         return null;
@@ -263,10 +293,11 @@ Parser.prototype.parseAttr = function(line) {
 
     var lengthNeeded = 1 + 4 + name.length + 2; // for at least one digit of data
 
-    if (line.length <= lengthNeeded) {
+    if (this.getAllChunksLength() <= lengthNeeded) {
         return null;
     }
 
+    var line = this.concatBufferForLength(lengthNeeded);
     var index = 5 + name.length;
     var typeIndicator = line.slice(index, index + 1).toString();
     index += 1; // 1 past indicator
@@ -276,6 +307,7 @@ Parser.prototype.parseAttr = function(line) {
         case 'I': // integer
             stringValue = this._getValueToNewline(line, index);
             if (stringValue) {
+                // console.log('I', index, stringValue.length, 1);
                 node = this.context.addAttrInt(name, parseInt(stringValue, 10));
                 this.chomp(index + stringValue.length + 1); // + 1 for \n
             }
@@ -302,25 +334,41 @@ Parser.prototype.parseAttr = function(line) {
     return node;
 };
 
-// warning: may lose \n at end at buffer boundaries
+Parser.prototype.findFirstNewline = function() {
+    var k = 0;
+    for (var i in this.chunks) {
+        var chunk = this.chunks[i];
+        for (var j = 0; j < chunk.length; j++) {
+            if (chunk[j] === 10) {
+                // console.log('found newline at', i, j, k);
+                return k;
+            }
+            k += 1;
+        }
+    }
+    return -1;
+};
+
 Parser.prototype._getValueToNewline = function(b, start) {
-    var line = b.toString();
-    var eol = line.indexOf('\n'); // bugbug: perf - converting buffer to string
+    var eol = this.findFirstNewline();
 
     if (eol === -1) {
-        // throw new Error("missing newline");
         return null; // don't have the full line
     } else {
-        return line.substring(start, eol);
+        var line = this.concatBufferForLength(eol + 1);
+        var length = eol - start;
+        var s = line.slice(start, start + length).toString();
+        // console.log('gvtnl', eol, start, length, '--'+s+'--');
+        return s;
     }
 };
 
-Parser.prototype.parseValue = function(line) {
+Parser.prototype.parseValue = function() {
     if (!this.cs) {
         throw new ConfigSectionException("value without root");
     }
 
-    var name = this.parseName(line);
+    var name = this.parseName();
 
     if (name == null) {
         return null;
@@ -328,10 +376,11 @@ Parser.prototype.parseValue = function(line) {
 
     var lengthNeeded = 1 + 4 + name.length + 2; // for at least one digit of data
 
-    if (line.length <= lengthNeeded) {
+    if (this.getAllChunksLength().length <= lengthNeeded) {
         return null;
     }
 
+    var line = this.concatBufferForLength(lengthNeeded);
     var index = 5 + name.length;
     var typeIndicator = line.slice(index, index + 1).toString();
     index += 1; // 1 past indicator

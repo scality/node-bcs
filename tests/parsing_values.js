@@ -46,13 +46,14 @@ describe('Value parsing', function() {
     });
 
     it('should parse name', function() {
-        var name = parser.parseName(new Buffer('A0004nameL42'));
+        parser.chunks = [new Buffer('A0004nameL42')];
+        var name = parser.parseName();
         expect(name).to.equal('name');
     });
 
     it('should parse longer name', function() {
-        var line = 'V0010longernameL42';
-        var name = parser.parseName(new Buffer(line));
+        parser.chunks = [new Buffer('V0010longernameL42')];
+        var name = parser.parseName();
         expect(name).to.equal('longername');
     });
 

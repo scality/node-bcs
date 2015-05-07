@@ -41,20 +41,30 @@ describe('ConfigSection', function() {
         });
     });
 
-    it('should transmit binary image', function(done) {
+    /*
+        to run this, first get the giant image (run this as one line):
+
+        wget -O tests/samples/large-earth.png
+            http://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73751/
+            world.topo.bathy.200407.3x21600x21600.A2.png
+
+        then, remove ".skip" below
+    */
+    it.skip('should transmit binary image', function(done) {
         // Add an image to a CS
-        var imageFilePath = __dirname + '/samples/win.jpeg';
+        var imageFilePath = __dirname + '/samples/large-earth.png';
         var imageBuffer = fs.readFileSync(imageFilePath);
 
         cs.addRaw('image', imageBuffer);
 
         var s = cs.objectList[0].getString();
-        expect(s.substring(0, 23)).to.be.equal('V0005imageR000000009065');
+        expect(s.substring(0, 23)).to.be.equal('V0005imageR000113357104');
 
         // write the CS to a temp file
         var configStream = new ConfigSectionReadableStream(cs);
         var tempFilePath = __dirname + '/../tmp/cs_with_image.txt';
         var writeStream = fs.createWriteStream(tempFilePath);
+        var startTime = new Date();
 
         configStream.pipe(writeStream)
         .on('close', function() {
@@ -68,7 +78,9 @@ describe('ConfigSection', function() {
                 var imageObject = cs.objectList[0];
                 expect(imageObject.nodevalue.length).to.be.equal(imageBuffer.length);
 
-                var outputImagePath = __dirname + '/../tmp/output-image.jpg';
+                console.log('Elapsed: ', new Date() - startTime);
+
+                var outputImagePath = __dirname + '/../tmp/large-earth-out.png';
                 fs.writeFileSync(outputImagePath, imageObject.nodevalue);
 
                 // todo: assert equal to original image
