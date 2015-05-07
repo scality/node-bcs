@@ -88,3 +88,26 @@ describe('Generating a large file', function() {
         });
     });
 });
+
+describe('Loading 10MB sample file', function() {
+    it('should load without errors', function(done) {
+        var parser = new Parser();
+        var filePath = __dirname + '/samples/CS10MB.raw';
+        var readStream = fs.createReadStream(filePath);
+
+        readStream.pipe(parser)
+        .on('close', function() {
+            var cs = parser.cs;
+            expect(cs).to.be.instanceof(ConfigSection);
+            expect(cs.objectList.length).to.be.equal(2);
+            expect(cs.getBranch('cmd').getValInt('id')).to.be.equal(5);
+            var b = cs.getBranch('data');
+            var contents = b.getValRaw('contents');
+            expect(contents).to.be.instanceof(Buffer);
+            expect(contents.length).to.be.equal(10000000);
+            expect(b.getValInt('archidlen')).to.be.equal(0);
+            expect(b.getValInt('archversion')).to.be.equal(0);
+            done();
+        });
+    });
+});
