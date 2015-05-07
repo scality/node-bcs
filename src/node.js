@@ -71,10 +71,9 @@ ConfigSectionNode.prototype.getPrefix = function() {
 };
 
 ConfigSectionNode.prototype.getBuffer = function() {
-    var prefix = this.getPrefix();
     if (this.nodevalue instanceof Buffer) {
         return Buffer.concat([
-            new Buffer(prefix),
+            new Buffer(this.getPrefix()),
             this.nodevalue,
             new Buffer('\n')
         ]);
