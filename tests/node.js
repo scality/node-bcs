@@ -19,12 +19,22 @@ describe('ConfigSectionNode', function() {
             new ConfigSectionNode('child-2')
         );
 
-        expect(node.inspect()).to.equal(
-            '{"name":"test-name","type":"ATTRTEXT",' +
-            '"attrList":[{"name":"child-1","attrList":[],' +
-            '"objectList":[],"value":null}],' +
-            '"objectList":[{"name":"child-2","attrList":[],' +
-            '"objectList":[],"value":null}],"value":"test-value"}'
-        );
+        expect(node.inspect()).to.equal(JSON.stringify({
+            name: "test-name",
+            type: "ATTRTEXT",
+            attrList: [{
+                name: "child-1",
+                attrList: [],
+                objectList: [],
+                value: null
+            }],
+            objectList: [{
+                name: "child-2",
+                attrList: [],
+                objectList: [],
+                value: null
+            }],
+            value: "test-value"
+        }));
     });
 });
