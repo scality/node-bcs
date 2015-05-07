@@ -8,7 +8,6 @@ var formatters = require('./formatters');
 
 function ConfigSectionNode(name) {
     ConfigSectionNode.super_.call(this, name);
-    this.nodevalue = undefined;
 }
 
 util.inherits(ConfigSectionNode, ConfigSectionObject);
@@ -24,6 +23,19 @@ ConfigSectionNode.prototype.setValue = function(value) {
 
 ConfigSectionNode.prototype.getValue = function() {
     return this.nodevalue;
+};
+
+ConfigSectionNode.prototype.setExpectedLength = function(length) {
+    this.expectedLength = length;
+};
+
+// RAW values with streams have an expectedLength, since length is not known
+ConfigSectionNode.prototype.getLength = function() {
+    if (this.expectedLength) {
+        return this.expectedLength;
+    } else {
+        return this.nodevalue.length;
+    }
 };
 
 ConfigSectionNode.prototype.isAttr = function() {
@@ -51,18 +63,21 @@ ConfigSectionNode.prototype.getString = function() {
     return formatters[t](this.name, this.nodevalue);
 };
 
-ConfigSectionNode.prototype.getBuffer = function() {
+// use formatter for prefix, but don't include value in string
+ConfigSectionNode.prototype.getPrefix = function() {
     var t = this.getType();
+    var prefix = formatters[t](this.name, '', this.getLength());
+    return prefix.substring(0, prefix.length - 1); // remove \n
+};
 
+ConfigSectionNode.prototype.getBuffer = function() {
+    var prefix = this.getPrefix();
     if (this.nodevalue instanceof Buffer) {
-        // use formatter for prefix, but don't convert buffer to string
-        var prefix = formatters[t](this.name, '', this.nodevalue.length);
-        prefix = prefix.substring(0, prefix.length - 1); // remove \n
         return Buffer.concat([
             new Buffer(prefix),
             this.nodevalue,
             new Buffer('\n')
-        ], prefix.length + this.nodevalue.length + 1);
+        ]);
     } else {
         return new Buffer(this.getString());
     }
