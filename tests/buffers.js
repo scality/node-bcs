@@ -41,6 +41,41 @@ describe('ConfigSection', function() {
         });
     });
 
+    it('should accept a readableStream as a raw value', function(done) {
+        var imageStream = fs.createReadStream(__dirname + '/samples/win.jpeg');
+        var expectedLength = 9065;
+        cs.addRaw('image', imageStream, expectedLength);
+        var isFirst = true;
+
+        imageStream
+        .on('readable', function() {
+            if (!isFirst) {
+                return;
+            }
+            isFirst = false;
+
+            // write cs to temp file
+            var tempFilePath = __dirname + '/../tmp/cs_with_streamed_image.raw';
+
+            cs.writeFile(tempFilePath, null, function() {
+                console.log('wrote file', cs);
+                // read temp file to verify
+                Parser.parseFile(tempFilePath, null, function(err, cs) {
+                    console.log(err);
+                    console.log('parsedFile'); //, cs);
+                    var buffer = cs.getValRaw('image');
+                    expect(buffer).to.be.instanceof(Buffer);
+                    expect(buffer.length).to.be.equal(expectedLength);
+                    // so we can check image not corrupted
+                    var outputImagePath = __dirname + '/../tmp/win-out.jpeg';
+                    fs.writeFileSync(outputImagePath, buffer);
+
+                    done();
+                });
+            });
+        });
+    });
+
     /*
         to run this, first get the giant image (run this as one line):
 
