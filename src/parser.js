@@ -15,11 +15,29 @@ function Parser(options) {
 util.inherits(Parser, Writable);
 module.exports = Parser;
 
+// create a CS from a string
 Parser.parseString = function(s) {
     var parser = new Parser();
     return parser.parseString(s);
 };
 
+// appends to this.cs based node described in string input
+// expects a full line as input
+// for convenience, adds a newline if it is missing
+Parser.prototype.parseString = function(input) {
+    input = input || '';
+
+    // add \n if missing
+    if (input[input.length - 1] !== '\n') {
+        input += '\n';
+    }
+
+    this.chunks.push(new Buffer(input));
+    this.readNodes();
+    return this.cs;
+};
+
+// create a CS from a filePath
 Parser.parseFile = function(filePath, options, callback) {
     var parser = new Parser();
     var readStream = fs.createReadStream(filePath, options);
@@ -35,20 +53,7 @@ Parser.parseFile = function(filePath, options, callback) {
     return parser;
 };
 
-// assumes nodes in string are terminated properly
-// leaves this.cs waiting for further input
-Parser.prototype.parseString = function(input) {
-    input = input || '';
-
-    if (input[input.length - 1] !== '\n') {
-        input += '\n'; // maybe should throw exception?
-    }
-
-    this.chunks.push(new Buffer(input));
-    this.readNodes();
-    return this.cs;
-};
-
+// creates a CS from a stream
 Parser.prototype.parse = function(readStream, callback) {
     var self = this;
 
@@ -65,13 +70,12 @@ Parser.prototype.parse = function(readStream, callback) {
     });
 };
 
+// implementation of the WritableStream interface
 // this interface allows the parser to be receive a .pipe()
-// assumes input stream is UTF-8 encoded
-// bugbug: make sure handles less than 1 line
 Parser.prototype._write = function(chunk, encoding, callback) {
-    // console.log('_write', chunk.length);
+    // convert string input to Buffer
     if (typeof(chunk) === 'string') {
-        chunk = new Buffer(chunk, "binary"); // to make testing easier
+        chunk = new Buffer(chunk, "binary");
     }
 
     this.chunks.push(chunk);
@@ -91,7 +95,6 @@ Parser.prototype.readNodes = function() {
 
 Parser.prototype.readNode = function() {
     var node = this.readLine();
-    // console.log('readNode', node);
     return node;
 };
 
