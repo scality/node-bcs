@@ -65,8 +65,8 @@ ConfigSectionReadableStream.prototype._read = function(size) {
             });
         }
     } else { // attribute or object
-        this.push(context.getBuffer()); // connect stream if available
         this.incrementIndexPath(); // to my next sibling
+        this.push(context.getBuffer()); // connect stream if available
     }
 };
 
