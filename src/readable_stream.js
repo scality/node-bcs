@@ -19,13 +19,12 @@ module.exports = ConfigSectionReadableStream;
 
 // The implementation of this function is what makes this class streamable
 // TODO: The caller passes the number of bytes they'd like to read.
-// Currently, this just returns one line every time. So, this
-// could be optimized using a loop to return the requested bytes.
-ConfigSectionReadableStream.prototype._read = function() {
-    var self = this;
+// Currently, this returns one node (the entire value) every time.
+// So, this could be optimized using a loop to return the requested bytes.
+ConfigSectionReadableStream.prototype._read = function(size) {
     var context = this.cs.getObjectAtIndexPath(this.indexPath);
 
-    if (context === undefined) {
+    if (!context) {
         this.popIndexPath(); // have processed all children
         var parent = this.cs.getObjectAtIndexPath(this.indexPath);
         this.push(parent.getEndString());
@@ -44,9 +43,39 @@ ConfigSectionReadableStream.prototype._read = function() {
     if (t === CSECTION.ROOT || t === CSECTION.BRANCH) {
         this.push(context.getStartString());
         this.pushIndexPath(); // process my first child next
+    } else if (t === CSECTION.RAWNODE &&
+        context.getValue() instanceof Readable) {
+        if (!this.isStreamingFromContext) {
+            // start streaming
+            this.push(context.getPrefix());
+            this.isStreamingFromContext = true; // read from stream next time
+        } else {
+            // continue streaming
+            this.isStreamingFromContext = this._readFromStream(context, size);
+            if (!this.isStreamingFromContext) { // all done
+                this.incrementIndexPath(); // to my next sibling
+            }
+        }
     } else { // attribute or object
-        self.push(context.getBuffer()); // connect stream if available
+        this.push(context.getBuffer()); // connect stream if available
         this.incrementIndexPath(); // to my next sibling
+    }
+};
+
+ConfigSectionReadableStream.prototype._readFromStream = function(context, size) {
+    var data = context.getValue().read(size);
+
+    console.log('_read data', size, data);
+    if (!data) { // try again without size
+        data = context.getValue().read();
+    }
+
+    if (data) {
+        this.push(data);
+        return true;
+    } else { // done reading
+        this.push('\n');
+        return false;
     }
 };
 
