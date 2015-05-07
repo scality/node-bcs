@@ -255,9 +255,8 @@ Parser.prototype.parseAttrOrValue = function(isValue) {
         return null;
     }
 
-    // +1 for at least one digit of data
     var lengthNeeded = BEFORE_NAME_LENGTH + name.length +
-        TYPE_INDICATOR_LENGTH + 1;
+        TYPE_INDICATOR_LENGTH + 1; // +1 for at least one digit of data
 
     var line = this.peek(lengthNeeded);
 
@@ -266,7 +265,7 @@ Parser.prototype.parseAttrOrValue = function(isValue) {
     }
 
     var index = BEFORE_NAME_LENGTH + name.length;
-    var typeIndicator = line.slice(index, index + 1).toString();
+    var typeIndicator = line.slice(index, index + TYPE_INDICATOR_LENGTH).toString();
     index += 1; // 1 past indicator
     var node;
 
@@ -392,7 +391,7 @@ Parser.prototype.parseTextOrRaw = function(isValue, typeIndicator, name) {
         return null;
     }
 
-    var index = lengthSoFar + 1; // start of size field
+    var index = lengthSoFar + TYPE_INDICATOR_LENGTH; // start of size field
     var dataSize = parseInt(line.slice(index, index + TEXT_SIZE_LENGTH), 10);
     var totalLength = index + TEXT_SIZE_LENGTH + dataSize;
 
