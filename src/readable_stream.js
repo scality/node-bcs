@@ -65,7 +65,6 @@ ConfigSectionReadableStream.prototype._read = function(size) {
 ConfigSectionReadableStream.prototype._readFromStream = function(context, size) {
     var data = context.getValue().read(size);
 
-    console.log('_read data', size, data);
     if (!data) { // try again without size
         data = context.getValue().read();
     }

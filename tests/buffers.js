@@ -58,11 +58,8 @@ describe('ConfigSection', function() {
             var tempFilePath = __dirname + '/../tmp/cs_with_streamed_image.raw';
 
             cs.writeFile(tempFilePath, null, function() {
-                console.log('wrote file', cs);
                 // read temp file to verify
                 Parser.parseFile(tempFilePath, null, function(err, cs) {
-                    console.log(err);
-                    console.log('parsedFile'); //, cs);
                     var buffer = cs.getValRaw('image');
                     expect(buffer).to.be.instanceof(Buffer);
                     expect(buffer.length).to.be.equal(expectedLength);
