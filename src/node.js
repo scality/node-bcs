@@ -95,6 +95,6 @@ ConfigSectionNode.prototype.getDict = function() {
 // Note: does not truncate long values
 ConfigSectionNode.prototype.toObject = function() {
     var obj = ConfigSectionNode.super_.prototype.toObject.call(this);
-    obj.value = this.getValue() ? this.getValue().toString() : null;
+    obj.value = this.getValue() || null;
     return obj;
 };
