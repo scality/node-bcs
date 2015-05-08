@@ -22,6 +22,14 @@ module.exports = ConfigSectionReadableStream;
 // Currently, this returns one node (the entire value) every time.
 // So, this could be optimized using a loop to return the requested bytes.
 ConfigSectionReadableStream.prototype._read = function(size) {
+    try {
+        this.handleRead(size);
+    } catch (err) {
+        this.emit('error', err);
+    }
+};
+
+ConfigSectionReadableStream.prototype.handleRead = function(size) {
     var self = this;
     var context = this.cs.getObjectAtIndexPath(this.indexPath);
 
@@ -50,14 +58,14 @@ ConfigSectionReadableStream.prototype._read = function(size) {
 
         if (this.isStreamingFromContext) {
             // continue streaming
-            this._readFromStream(stream, size);
+            this.readFromStream(stream, size);
         } else {
             // start streaming
             this.push(context.getPrefix());
             this.isStreamingFromContext = true; // read from stream next time
 
             stream.on('readable', function() {
-                self._readFromStream(stream, size); // using the last size?
+                self.readFromStream(stream, size); // using the last size?
             });
 
             stream.on('end', function() {
@@ -72,7 +80,7 @@ ConfigSectionReadableStream.prototype._read = function(size) {
     }
 };
 
-ConfigSectionReadableStream.prototype._readFromStream = function(stream, size) {
+ConfigSectionReadableStream.prototype.readFromStream = function(stream, size) {
     var data = stream.read(size);
 
     if (data) {

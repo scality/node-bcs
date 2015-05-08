@@ -217,8 +217,21 @@ describe('ConfigSectionReadableStream', function() {
         });
     });
 
-    // TODO
-    // it.skip('should stream an empty object', function(done) {
-    //     done();
-    // });
+    it('should emit error for invalid object', function(done) {
+        var cs = new ConfigSection('test');
+
+        cs.objectList.push({
+            name: 'Unexpected object'
+        });
+
+        var csStream = new ConfigSectionReadableStream(cs);
+        var writeStream = fs.createWriteStream(tempFilePath);
+
+        csStream
+        .on('error', function(err) {
+            expect(err).to.be.instanceof(Error);
+            done();
+        })
+        .pipe(writeStream);
+    });
 });
