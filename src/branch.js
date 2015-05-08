@@ -94,10 +94,13 @@ ConfigSectionBranch.prototype.addText = function(name, value) {
 };
 
 // todo: This should either convert value to Buffer or throw an error
-ConfigSectionBranch.prototype.addRaw = function(name, value) {
+ConfigSectionBranch.prototype.addRaw = function(name, value, expectedLength) {
     var n = this._addNode(name);
     n.setType(CSECTION.RAWNODE);
     n.setValue(value);
+    if (expectedLength) {
+        n.setExpectedLength(expectedLength);
+    }
     n.parent = this;
     return n;
 };

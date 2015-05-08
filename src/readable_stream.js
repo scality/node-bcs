@@ -19,13 +19,13 @@ module.exports = ConfigSectionReadableStream;
 
 // The implementation of this function is what makes this class streamable
 // TODO: The caller passes the number of bytes they'd like to read.
-// Currently, this just returns one line every time. So, this
-// could be optimized using a loop to return the requested bytes.
-ConfigSectionReadableStream.prototype._read = function() {
+// Currently, this returns one node (the entire value) every time.
+// So, this could be optimized using a loop to return the requested bytes.
+ConfigSectionReadableStream.prototype._read = function(size) {
     var self = this;
     var context = this.cs.getObjectAtIndexPath(this.indexPath);
 
-    if (context === undefined) {
+    if (!context) {
         this.popIndexPath(); // have processed all children
         var parent = this.cs.getObjectAtIndexPath(this.indexPath);
         this.push(parent.getEndString());
@@ -44,9 +44,39 @@ ConfigSectionReadableStream.prototype._read = function() {
     if (t === CSECTION.ROOT || t === CSECTION.BRANCH) {
         this.push(context.getStartString());
         this.pushIndexPath(); // process my first child next
+    } else if (t === CSECTION.RAWNODE &&
+        context.getValue() instanceof Readable) {
+        var stream = context.getValue();
+
+        if (this.isStreamingFromContext) {
+            // continue streaming
+            this._readFromStream(stream, size);
+        } else {
+            // start streaming
+            this.push(context.getPrefix());
+            this.isStreamingFromContext = true; // read from stream next time
+
+            stream.on('readable', function() {
+                self._readFromStream(stream, size); // using the last size?
+            });
+
+            stream.on('end', function() {
+                self.isStreamingFromContext = false;
+                self.incrementIndexPath(); // to my next sibling
+                self.push('\n');
+            });
+        }
     } else { // attribute or object
-        self.push(context.getBuffer()); // connect stream if available
         this.incrementIndexPath(); // to my next sibling
+        this.push(context.getBuffer()); // connect stream if available
+    }
+};
+
+ConfigSectionReadableStream.prototype._readFromStream = function(stream, size) {
+    var data = stream.read(size);
+
+    if (data) {
+        this.push(data);
     }
 };
 
