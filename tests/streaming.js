@@ -166,10 +166,34 @@ describe('Parser', function() {
         });
     });
 
-    // TODO
-    // it.skip('should throw error for an empty file', function(done) {
-    //     done();
-    // });
+    it('should throw error for an empty file', function(done) {
+        var blankFilePath = __dirname + '/samples/blank.raw';
+        Parser.parseFile(blankFilePath, null, function(err) {
+            expect(err).to.be.instanceof(Error);
+            expect(err.message)
+                .to.be.equal('Input stream did not contain root node');
+            done();
+        });
+    });
+
+    // handle an incomplete file
+    it('should throw error for an incomplete file', function(done) {
+        Parser.parseFile(__dirname + '/samples/incomplete.raw', null, function(err) {
+            expect(err).to.be.instanceof(Error);
+            expect(err.message)
+                .to.be.equal('Input stream incomplete');
+            done();
+        });
+    });
+
+    it('should throw error for a malformed file', function(done) {
+        Parser.parseFile(__dirname + '/samples/malformed.raw', null, function(err) {
+            expect(err).to.be.instanceof(Error);
+            expect(err.message)
+                .to.be.equal('Invalid line (starts with X)');
+            done();
+        });
+    });
 });
 
 describe('ConfigSectionReadableStream', function() {
@@ -184,10 +208,6 @@ describe('ConfigSectionReadableStream', function() {
             var configSectionStreamer = new ConfigSectionReadableStream(parser.cs);
 
             configSectionStreamer.pipe(writeStream)
-            .on('error', function(err) {
-                console.log('error', err);
-                throw err;
-            })
             .on('close', function() {
                 var actual = fs.readFileSync(tempFilePath).toString();
                 var expected = fs.readFileSync(expectedResultsFilePath).toString();

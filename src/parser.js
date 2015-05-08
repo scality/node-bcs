@@ -9,6 +9,9 @@ var ConfigSectionException = require('./exception');
 function Parser(options) {
     Writable.call(this, options);
     this.chunks = [];
+
+    // watch for input stream to finish so we can emit errors if input incomplete
+    this.on('finish', this.onInputFinished.bind(this));
 }
 
 util.inherits(Parser, Writable);
@@ -78,10 +81,17 @@ Parser.prototype._write = function(chunk, encoding, callback) {
     }
 
     this.chunks.push(chunk);
-    this.readNodes();
+
+    var error;
+
+    try {
+        this.readNodes();
+    } catch (err) {
+        error = err;
+    }
 
     if (callback) {
-        callback();
+        callback(error);
     }
 };
 
@@ -343,7 +353,6 @@ Parser.prototype.findFirstNewline = function() {
         var chunk = this.chunks[i];
         for (var j = 0; j < chunk.length; j++) {
             if (chunk[j] === 10) {
-                // console.log('found newline at', i, j, k);
                 return k;
             }
             k += 1;
@@ -420,4 +429,17 @@ Parser.prototype.parseTextOrRaw = function(isValue, typeIndicator, name) {
 
     this.chomp(totalLength + NEWLINE_LENGTH);
     return node;
+};
+
+// checks to see if we are in an incomplete state
+Parser.prototype.onInputFinished = function() {
+    if (!this.cs) {
+        this.emit('error',
+            new Error('Input stream did not contain root node'));
+    }
+
+    if (this.context) { // in the middle of a node
+        this.emit('error',
+            new Error('Input stream incomplete'));
+    }
 };
