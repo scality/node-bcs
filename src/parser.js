@@ -62,7 +62,7 @@ Parser.prototype.parse = function(readStream, callback) {
     readStream
     .pipe(this)
     .on('error', function(err) {
-        console.error('Error occurred while reading stream', err);
+        //console.error('Error occurred while reading stream', err);
         process.nextTick(function() {
             callback(err);
         });

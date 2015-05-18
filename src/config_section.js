@@ -41,6 +41,10 @@ ConfigSection.prototype.getObjectAtIndexPath = function(path) {
     return context;
 };
 
+ConfigSection.prototype.getReadableStream = function() {
+    return new ConfigSectionReadableStream(this);
+}
+
 // Convenience function for tests
 ConfigSection.prototype.writeFile = function(filePath, options, callback) {
     var readStream = new ConfigSectionReadableStream(this);
