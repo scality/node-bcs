@@ -55,8 +55,12 @@ module.exports[CSECTION.TEXTNODE] = function(name, value) {
 };
 
 module.exports[CSECTION.RAWNODE] = function(name, value, length) {
-    return sprintf("V%'04d%sR%'012d%s\n", name.length, name,
+    if (Buffer.isBuffer(value))
+        value = value.toString("binary");
+    
+    var ret = sprintf("V%'04d%sR%'012d%s\n", name.length, name,
         value ? value.length : length, value);
+    return ret;
 };
 
 module.exports[CSECTION.TIMESTAMPNODE] = function(name, value) {
