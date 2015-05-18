@@ -171,6 +171,7 @@ Parser.prototype.readNode = function() {
         case 'A':  // attribute
             return this.parseAttrOrValue(false);
         default:
+            console.log("Invalid CS", Buffer.concat(this.chunks).toString());
             throw new ConfigSectionException(
                 'Invalid line (starts with ' + firstLetter + ')');
     }
